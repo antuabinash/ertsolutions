@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chapter Content – ERT Odisha</title>
 
+<!-- PWA Meta Tags -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="logo.png">
@@ -19,6 +20,7 @@
     --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
   }
 
+  /* Added PWA tap-highlight removal */
   * { 
     margin: 0; padding: 0; box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent;
@@ -72,13 +74,15 @@
   .cc-arrow { transition: transform 0.2s; }
   .class-card:hover .cc-arrow { transform: translateX(4px); }
 
-  /* Colors */
+  /* Colors (Added all 8 to support the new tiles) */
   .c1 .cc-top { background: linear-gradient(135deg, #FFF3CC, #FFE680); } .c1 .cc-bottom { color: #E6A800; }
   .c2 .cc-top { background: linear-gradient(135deg, #D4F5EC, #A8EDD9); } .c2 .cc-bottom { color: #00A878; }
   .c3 .cc-top { background: linear-gradient(135deg, #D6EAFF, #AACEFF); } .c3 .cc-bottom { color: #2176DB; }
-  .c4 .cc-top { background: linear-gradient(135deg, #FFE5D9, #FFD4B0); } .c4 .cc-bottom { color: #E87722; }
+  .c4 .cc-top { background: linear-gradient(135deg, #FFE4E4, #FFBBBB); } .c4 .cc-bottom { color: #D94040; }
   .c5 .cc-top { background: linear-gradient(135deg, #EDE0FF, #D4BAFF); } .c5 .cc-bottom { color: #7B3FD4; }
-  .c6 .cc-top { background: linear-gradient(135deg, #FFD9E0, #FFC4D6); } .c6 .cc-bottom { color: #D63384; }
+  .c6 .cc-top { background: linear-gradient(135deg, #D8F8FF, #A2EEFF); } .c6 .cc-bottom { color: #0097B2; }
+  .c7 .cc-top { background: linear-gradient(135deg, #FFE8D6, #FFCBA8); } .c7 .cc-bottom { color: #D46120; }
+  .c8 .cc-top { background: linear-gradient(135deg, #E0FFE6, #B0F0BD); } .c8 .cc-bottom { color: #1B8A3A; }
 
   /* MOBILE / TABLET OVERRIDES FOR RECTANGULAR TILES */
   @media (max-width: 900px) {
@@ -111,6 +115,7 @@
 <body>
 
   <div class="subject-toolbar">
+    <!-- SMART BACK BUTTON -->
     <button type="button" class="back-btn" id="back-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -125,6 +130,7 @@
   <section class="classes-section">
     <div class="classes-grid">
       
+      <!-- TILE 1: Notes -->
       <a href="#" class="class-card c1" style="animation-delay: 0.0s">
         <div class="cc-top">
           <div class="cc-emoji">📓</div>
@@ -137,6 +143,7 @@
         </div>
       </a>
 
+      <!-- TILE 2: Lesson Plan -->
       <a href="#" class="class-card c2" style="animation-delay: 0.1s">
         <div class="cc-top">
           <div class="cc-emoji">📋</div>
@@ -149,6 +156,7 @@
         </div>
       </a>
 
+      <!-- TILE 3: Q & A -->
       <a href="#" class="class-card c3" style="animation-delay: 0.2s">
         <div class="cc-top">
           <div class="cc-emoji">💡</div>
@@ -161,6 +169,7 @@
         </div>
       </a>
 
+      <!-- TILE 4: Quiz -->
       <a href="#" class="class-card c5" style="animation-delay: 0.3s">
         <div class="cc-top">
           <div class="cc-emoji">🎯</div>
@@ -173,9 +182,10 @@
         </div>
       </a>
 
-      <a href="#" class="class-card c4" style="animation-delay: 0.4s">
+      <!-- TILE 5: Learning Outcome -->
+      <a href="#" class="class-card c6" style="animation-delay: 0.4s">
         <div class="cc-top">
-          <div class="cc-emoji">🎓</div>
+          <div class="cc-emoji">📈</div>
           <div class="cc-class">Learning Outcome</div>
           <div class="cc-odia">ଶିକ୍ଷଣ ଫଳାଫଳ</div>
         </div>
@@ -185,11 +195,12 @@
         </div>
       </a>
 
-      <a href="#" class="class-card c6" style="animation-delay: 0.5s">
+      <!-- TILE 6: TLM -->
+      <a href="#" class="class-card c4" style="animation-delay: 0.5s">
         <div class="cc-top">
-          <div class="cc-emoji">📚</div>
+          <div class="cc-emoji">🧩</div>
           <div class="cc-class">TLM</div>
-          <div class="cc-odia">ଶିକ୍ଷଣ ସାମଗ୍ରୀ</div>
+          <div class="cc-odia">ଶିକ୍ଷଣ ଉପକରଣ</div>
         </div>
         <div class="cc-bottom">
           <span>Open</span>
