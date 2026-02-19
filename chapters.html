@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chapters – ERT Odisha</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="logo.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -12,7 +19,12 @@
     --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Added PWA tap-highlight removal */
+  * { 
+    margin: 0; padding: 0; box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent;
+  }
+  
   body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
   /* TOOLBAR */
@@ -26,6 +38,7 @@
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
     text-decoration: none; 
+    user-select: none; -webkit-user-select: none; /* PWA native feel */
   }
   .back-btn:hover { background: #e2e8f0; }
   .toolbar-text { display: flex; flex-direction: column; }
@@ -41,6 +54,7 @@
     background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow);
     cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
     display: block; position: relative; opacity: 0; animation: fadeUp 0.4s ease forwards;
+    user-select: none; -webkit-user-select: none; /* PWA native feel */
   }
   .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
@@ -167,6 +181,15 @@
     `;
     chapterList.insertAdjacentHTML('beforeend', cardHTML);
   });
+
+  // --- PWA SERVICE WORKER REGISTRATION ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker Registered Successfully!', reg))
+        .catch(err => console.log('Service Worker Registration Failed:', err));
+    });
+  }
 </script>
 
 </body>
