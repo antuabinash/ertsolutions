@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ERT Odisha – Digital Learning</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="logo.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,11 +18,17 @@
     --purple: #845EF7; --bg: #F0F7FF; --white: #ffffff; --dark: #1A1A2E;
     --text: #3D4A5C; --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  /* Added PWA tap-highlight removal */
+  * { 
+    margin: 0; padding: 0; box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+  }
+  
   body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
   /* NAV */
-  nav { background: var(--white); padding: 0 5%; display: flex; align-items: center; justify-content: space-between; height: 70px; box-shadow: 0 2px 16px rgba(58,134,255,0.08); position: sticky; top: 0; z-index: 100; }
+  nav { background: var(--white); padding: 0 5%; display: flex; align-items: center; justify-content: space-between; height: 70px; box-shadow: 0 2px 16px rgba(58,134,255,0.08); position: sticky; top: 0; z-index: 100; user-select: none; }
   .nav-left { display: flex; align-items: center; gap: 15px; }
   .hamburger { display: none; font-size: 1.8rem; cursor: pointer; color: var(--dark); user-select: none; }
   
@@ -80,7 +93,7 @@
   /* CLASSES */
   .classes-section { padding: 60px 5%; max-width: 1200px; margin: 0 auto; }
   .classes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; }
-  .class-card { background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none; display: block; position: relative; }
+  .class-card { background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow); cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none; display: block; position: relative; user-select: none; -webkit-user-select: none; }
   .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
   .cc-top { padding: 1.6rem 1.4rem 1rem; display: flex; flex-direction: column; align-items: center; }
   .cc-emoji { font-size: 2.8rem; margin-bottom: 0.4rem; }
@@ -296,6 +309,7 @@
 </div>
 
 <script>
+  // Mobile drawer logic
   const hamburger = document.getElementById('hamburger');
   const drawer = document.getElementById('mobile-drawer');
   const overlay = document.getElementById('mobile-overlay');
@@ -304,6 +318,15 @@
   hamburger.addEventListener('click', toggleMenu);
   closeBtn.addEventListener('click', toggleMenu);
   overlay.addEventListener('click', toggleMenu);
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Service Worker Registered Successfully!', reg))
+        .catch(err => console.log('Service Worker Registration Failed:', err));
+    });
+  }
 </script>
 
 </body>

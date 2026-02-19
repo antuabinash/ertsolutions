@@ -1,0 +1,22 @@
+{
+  "name": "ERT Odisha Digital Learning",
+  "short_name": "ERT Odisha",
+  "description": "Quality e-resources designed specially for students across Odisha.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F0F7FF",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
