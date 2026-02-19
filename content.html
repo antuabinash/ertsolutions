@@ -19,7 +19,6 @@
     --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
   }
 
-  /* Added PWA tap-highlight removal */
   * { 
     margin: 0; padding: 0; box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent;
@@ -33,14 +32,12 @@
     background: var(--white); border-bottom: 1px solid #e8eef5;
     position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   }
-  
-  /* UPDATED BACK BUTTON (Button styling) */
   .back-btn {
     margin-right: 15px; color: var(--dark);
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
-    border: none; cursor: pointer; /* Needed for <button> */
-    user-select: none; -webkit-user-select: none; /* PWA native feel */
+    border: none; cursor: pointer;
+    user-select: none; -webkit-user-select: none;
   }
   .back-btn:hover { background: #e2e8f0; }
 
@@ -57,7 +54,7 @@
     background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow);
     cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
     display: block; position: relative; opacity: 0; animation: fadeUp 0.4s ease forwards;
-    user-select: none; -webkit-user-select: none; /* PWA native feel */
+    user-select: none; -webkit-user-select: none;
   }
   .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
@@ -112,7 +109,7 @@
 <body>
 
   <div class="subject-toolbar">
-    <button class="back-btn" onclick="window.history.back()">
+    <button type="button" class="back-btn" id="back-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -178,15 +175,21 @@
   </section>
 
 <script>
-  // --- GET DATA FROM URL ---
   const hashString = window.location.hash.substring(1);
   const urlParams = new URLSearchParams(hashString);
-  
   const classId = urlParams.get('class') || '1';
   const subjectKey = urlParams.get('subject') || 'odia';
   const chapterNum = urlParams.get('chapter') || '01';
 
-  // --- SETUP DYNAMIC TITLES ---
+  // Smart Back Logic
+  document.getElementById('back-btn').addEventListener('click', function() {
+    if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+      window.history.back();
+    } else {
+      window.location.replace(`chapters.html#class=${classId}&subject=${subjectKey}`);
+    }
+  });
+
   const subjectNames = {
     odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa', 
     eng: 'English', sci: 'Science', soc: 'Social Science', 
@@ -198,13 +201,11 @@
   document.getElementById('page-title').innerText = `Chapter ${chapterNum}`;
   document.getElementById('page-subtitle').innerText = `Class ${classId} • ${subjectName}`;
 
-  // --- PWA SERVICE WORKER REGISTRATION ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js');
     });
   }
 </script>
-
 </body>
 </html>

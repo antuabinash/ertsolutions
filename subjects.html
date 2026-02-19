@@ -19,7 +19,6 @@
     --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
   }
 
-  /* Added PWA tap-highlight removal */
   * { 
     margin: 0; padding: 0; box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent;
@@ -34,11 +33,11 @@
     position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   }
   .back-btn {
-    font-size: 1.4rem; margin-right: 15px; color: var(--dark);
+    margin-right: 15px; color: var(--dark);
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
-    text-decoration: none; /* Native link behavior */
-    user-select: none; -webkit-user-select: none; /* PWA native feel */
+    border: none; cursor: pointer;
+    user-select: none; -webkit-user-select: none; 
   }
   .back-btn:hover { background: #e2e8f0; }
   .subject-title { font-family: 'Baloo 2', cursive; font-size: 1.4rem; font-weight: 700; color: var(--dark); margin: 0;}
@@ -52,7 +51,7 @@
     background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow);
     cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
     display: block; position: relative; opacity: 0; animation: fadeUp 0.4s ease forwards;
-    user-select: none; -webkit-user-select: none; /* PWA native feel */
+    user-select: none; -webkit-user-select: none; 
   }
   .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
@@ -111,7 +110,7 @@
 <body>
 
   <div class="subject-toolbar">
-    <button class="back-btn" onclick="window.history.back()">
+    <button type="button" class="back-btn" id="back-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -125,7 +124,15 @@
   </section>
 
 <script>
-  // Subjects Database
+  // Smart Back Logic: If history exists pop it, otherwise force load index to stop loops
+  document.getElementById('back-btn').addEventListener('click', function() {
+    if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+      window.history.back();
+    } else {
+      window.location.replace('index.html');
+    }
+  });
+
   const commonSubjects = {
     odia: { name: 'Odia', odia: 'ଓଡ଼ିଆ', emoji: '📖', color: 'c3' },
     math: { name: 'Mathematics', odia: 'ଗଣିତ', emoji: '🔢', color: 'c1' },
@@ -153,24 +160,20 @@
     5: "ପଞ୍ଚମ ଶ୍ରେଣୀ", 6: "ଷଷ୍ଠ ଶ୍ରେଣୀ", 7: "ସପ୍ତମ ଶ୍ରେଣୀ", 8: "ଅଷ୍ଟମ ଶ୍ରେଣୀ"
   };
 
-  // Get class ID from the Hash
   const hash = window.location.hash; 
-  let classId = 1; // Default
+  let classId = 1; 
   if (hash.includes('#class=')) {
     classId = hash.replace('#class=', '');
   }
 
-  // Set the Title
   document.getElementById('subject-title').innerText = classNamesOdia[classId];
 
-  // Render the Subjects
   const subjectGrid = document.getElementById('subject-grid');
   const classSubjects = classSubjectsMap[classId] || [];
   
   classSubjects.forEach((sub, index) => {
     const delay = index * 0.05;
     
-    // Find the short code for the URL (e.g., 'math', 'sci')
     let subKey = 'odia'; 
     for(let key in commonSubjects) {
       if(commonSubjects[key].name === sub.name) subKey = key;
@@ -192,12 +195,9 @@
     subjectGrid.insertAdjacentHTML('beforeend', subHTML);
   });
 
-  // Register PWA Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker Registered Successfully!', reg))
-        .catch(err => console.log('Service Worker Registration Failed:', err));
+      navigator.serviceWorker.register('sw.js');
     });
   }
 </script>

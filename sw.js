@@ -1,6 +1,5 @@
-const CACHE_NAME = 'ert-odisha-v1';
+const CACHE_NAME = 'ert-odisha-v2'; // Updated to v2 to clear old cache!
 
-// Add all the files you want to work offline here
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,22 +7,19 @@ const ASSETS_TO_CACHE = [
   './chapters.html',
   './content.html',
   './logo.png',
-  './bg-image.jpg' // Add any other images you use here
+  './bg-image.jpg'
 ];
 
-// Install Event: Save files to cache
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Caching offline assets');
         return cache.addAll(ASSETS_TO_CACHE);
       })
   );
   self.skipWaiting();
 });
 
-// Activate Event: Cleanup old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -37,7 +33,6 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch Event: Serve from cache if offline
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
