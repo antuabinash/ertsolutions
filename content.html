@@ -33,14 +33,17 @@
     background: var(--white); border-bottom: 1px solid #e8eef5;
     position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   }
+  
+  /* UPDATED BACK BUTTON (Button styling) */
   .back-btn {
-    font-size: 1.4rem; margin-right: 15px; color: var(--dark);
+    margin-right: 15px; color: var(--dark);
     display: flex; align-items: center; justify-content: center;
     width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
-    text-decoration: none; 
+    border: none; cursor: pointer; /* Needed for <button> */
     user-select: none; -webkit-user-select: none; /* PWA native feel */
   }
   .back-btn:hover { background: #e2e8f0; }
+
   .toolbar-text { display: flex; flex-direction: column; }
   .subject-title { font-family: 'Baloo 2', cursive; font-size: 1.3rem; font-weight: 700; color: var(--dark); margin: 0; line-height: 1.2;}
   .class-subtitle { font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
@@ -109,7 +112,11 @@
 <body>
 
   <div class="subject-toolbar">
-    <a href="#" id="back-link" class="back-btn">←</a>
+    <button class="back-btn" onclick="window.history.back()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
     <div class="toolbar-text">
       <h2 class="subject-title" id="page-title">Chapter Content</h2>
       <span class="class-subtitle" id="page-subtitle">Class • Subject</span>
@@ -179,9 +186,6 @@
   const subjectKey = urlParams.get('subject') || 'odia';
   const chapterNum = urlParams.get('chapter') || '01';
 
-  // --- SETUP SMART BACK BUTTON ---
-  document.getElementById('back-link').href = `chapters.html#class=${classId}&subject=${subjectKey}`;
-
   // --- SETUP DYNAMIC TITLES ---
   const subjectNames = {
     odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa', 
@@ -197,9 +201,7 @@
   // --- PWA SERVICE WORKER REGISTRATION ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then(reg => console.log('Service Worker Registered Successfully!', reg))
-        .catch(err => console.log('Service Worker Registration Failed:', err));
+      navigator.serviceWorker.register('sw.js');
     });
   }
 </script>
