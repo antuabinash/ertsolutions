@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter Content – ERT Odisha</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sun: #FFBE0B; --sky: #3A86FF; --bg: #F0F7FF; 
+    --white: #ffffff; --dark: #1A1A2E; --text: #3D4A5C;
+    --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  /* TOOLBAR */
+  .subject-toolbar {
+    display: flex; align-items: center; padding: 15px 5%;
+    background: var(--white); border-bottom: 1px solid #e8eef5;
+    position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  }
+  .back-btn {
+    font-size: 1.4rem; margin-right: 15px; color: var(--dark);
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
+    text-decoration: none; 
+  }
+  .back-btn:hover { background: #e2e8f0; }
+  .toolbar-text { display: flex; flex-direction: column; }
+  .subject-title { font-family: 'Baloo 2', cursive; font-size: 1.3rem; font-weight: 700; color: var(--dark); margin: 0; line-height: 1.2;}
+  .class-subtitle { font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
+
+  /* GRID CONTAINER */
+  .classes-section { padding: 30px 5% 60px; max-width: 1200px; margin: 0 auto; }
+  .classes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; }
+
+  /* TILE STYLE */
+  .class-card {
+    background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow);
+    cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
+    display: block; position: relative; opacity: 0; animation: fadeUp 0.4s ease forwards;
+  }
+  .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .cc-top { padding: 1.6rem 1.4rem 1rem; display: flex; flex-direction: column; align-items: center; }
+  .cc-emoji { font-size: 2.8rem; margin-bottom: 0.4rem; line-height: 1;}
+  .cc-class { font-size: 0.75rem; font-weight: 700; color: #888; letter-spacing: 0.5px; text-transform: uppercase;}
+  .cc-odia { font-size: 1rem; font-weight: 700; color: var(--dark); margin-top: 0.3rem; text-align: center; }
+  
+  .cc-bottom {
+    padding: 0.8rem 1.4rem 1.2rem; display: flex; align-items: center; justify-content: center;
+    gap: 0.4rem; font-size: 0.82rem; font-weight: 700; border-top: 1px solid #f0f0f0;
+  }
+  .cc-bottom span { opacity: 0.7; }
+  .cc-arrow { transition: transform 0.2s; }
+  .class-card:hover .cc-arrow { transform: translateX(4px); }
+
+  /* Colors */
+  .c1 .cc-top { background: linear-gradient(135deg, #FFF3CC, #FFE680); } .c1 .cc-bottom { color: #E6A800; }
+  .c2 .cc-top { background: linear-gradient(135deg, #D4F5EC, #A8EDD9); } .c2 .cc-bottom { color: #00A878; }
+  .c3 .cc-top { background: linear-gradient(135deg, #D6EAFF, #AACEFF); } .c3 .cc-bottom { color: #2176DB; }
+  .c5 .cc-top { background: linear-gradient(135deg, #EDE0FF, #D4BAFF); } .c5 .cc-bottom { color: #7B3FD4; }
+
+  /* MOBILE / TABLET OVERRIDES FOR RECTANGULAR TILES */
+  @media (max-width: 900px) {
+    .classes-section { padding: 15px 5% 40px; }
+    .classes-grid { grid-template-columns: 1fr; gap: 14px; }
+    .class-card { display: flex; flex-direction: row; align-items: stretch; border-radius: 20px; }
+    
+    .cc-top {
+      flex: 1; display: grid; grid-template-columns: auto 1fr; align-items: center;
+      gap: 0 14px; padding: 16px 20px; border-radius: 20px 0 0 20px;
+    }
+    .cc-emoji { grid-column: 1; grid-row: 1 / span 2; margin: 0; font-size: 2.4rem; }
+    .cc-class { grid-column: 2; grid-row: 1; text-align: left; font-size: 0.85rem; align-self: end; padding-bottom: 2px;}
+    .cc-odia { grid-column: 2; grid-row: 2; text-align: left; margin: 0; font-size: 1.15rem; align-self: start; }
+
+    .cc-bottom {
+      border-top: none; padding: 0 22px; background: var(--white); border-radius: 0 20px 20px 0;
+      box-shadow: -4px 0 12px rgba(0,0,0,0.02); z-index: 2;
+    }
+    .cc-bottom span:first-child { display: none; } 
+    .cc-bottom .cc-arrow { font-size: 1.5rem; }
+  }
+  @media (max-width: 480px) {
+    .cc-top { padding: 14px 16px; gap: 0 12px; }
+    .cc-emoji { font-size: 2.2rem; }
+    .cc-bottom { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="subject-toolbar">
+    <a href="#" id="back-link" class="back-btn">←</a>
+    <div class="toolbar-text">
+      <h2 class="subject-title" id="page-title">Chapter Content</h2>
+      <span class="class-subtitle" id="page-subtitle">Class • Subject</span>
+    </div>
+  </div>
+  
+  <section class="classes-section">
+    <div class="classes-grid">
+      
+      <a href="#" class="class-card c1" style="animation-delay: 0.0s">
+        <div class="cc-top">
+          <div class="cc-emoji">📓</div>
+          <div class="cc-class">Study Notes</div>
+          <div class="cc-odia">ନୋଟ</div>
+        </div>
+        <div class="cc-bottom">
+          <span>Open</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="class-card c2" style="animation-delay: 0.1s">
+        <div class="cc-top">
+          <div class="cc-emoji">📋</div>
+          <div class="cc-class">Lesson Plan</div>
+          <div class="cc-odia">ପାଠ୍ୟ ଯୋଜନା</div>
+        </div>
+        <div class="cc-bottom">
+          <span>Open</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="class-card c3" style="animation-delay: 0.2s">
+        <div class="cc-top">
+          <div class="cc-emoji">💡</div>
+          <div class="cc-class">Question & Answer</div>
+          <div class="cc-odia">ପ୍ରଶ୍ନ ଉତ୍ତର</div>
+        </div>
+        <div class="cc-bottom">
+          <span>Open</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </a>
+
+      <a href="#" class="class-card c5" style="animation-delay: 0.3s">
+        <div class="cc-top">
+          <div class="cc-emoji">🎯</div>
+          <div class="cc-class">Practice Quiz</div>
+          <div class="cc-odia">କ୍ୱିଜ୍</div>
+        </div>
+        <div class="cc-bottom">
+          <span>Open</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+<script>
+  // --- GET DATA FROM URL ---
+  const hashString = window.location.hash.substring(1);
+  const urlParams = new URLSearchParams(hashString);
+  
+  const classId = urlParams.get('class') || '1';
+  const subjectKey = urlParams.get('subject') || 'odia';
+  const chapterNum = urlParams.get('chapter') || '01';
+
+  // --- SETUP SMART BACK BUTTON ---
+  document.getElementById('back-link').href = `chapters.html#class=${classId}&subject=${subjectKey}`;
+
+  // --- SETUP DYNAMIC TITLES ---
+  const subjectNames = {
+    odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa', 
+    eng: 'English', sci: 'Science', soc: 'Social Science', 
+    hindi: 'Hindi', skt: 'Sanskrit'
+  };
+  
+  const subjectName = subjectNames[subjectKey] || 'Subject';
+  
+  document.getElementById('page-title').innerText = `Chapter ${chapterNum}`;
+  document.getElementById('page-subtitle').innerText = `Class ${classId} • ${subjectName}`;
+
+</script>
+
+</body>
+</html>
