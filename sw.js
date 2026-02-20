@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ert-odisha-v2'; // Updated to v2 to clear old cache!
+const CACHE_NAME = 'ert-odisha-v3';
 
 const ASSETS_TO_CACHE = [
   './',
@@ -10,6 +10,7 @@ const ASSETS_TO_CACHE = [
   './bg-image.jpg'
 ];
 
+// 1. Install Event - Cache initial files
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -20,6 +21,7 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
+// 2. Activate Event - Clear old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => {
@@ -33,10 +35,23 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+// 3. Fetch Event - NETWORK FIRST, FALLBACK TO CACHE
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      return cachedResponse || fetch(event.request);
-    })
+    // Step A: Always try to get the newest file from GitHub (the network) first
+    fetch(event.request)
+      .then(networkResponse => {
+        // If successful, take a copy of the fresh file and update the cache silently!
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseClone);
+        });
+        // Return the fresh file to the user
+        return networkResponse;
+      })
+      .catch(() => {
+        // Step B: If the network fetch fails (user is offline), use the saved cache
+        return caches.match(event.request);
+      })
   );
 });
