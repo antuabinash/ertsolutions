@@ -91,7 +91,7 @@
             </div>
             
             <!-- MULTI-FILTER TOOLBAR -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <input type="text" id="filter-search" placeholder="Search title..." class="col-span-2 md:col-span-1 px-3 py-2 rounded-lg border outline-none text-sm font-bold" onkeyup="applyLiveFilter()">
               <select id="filter-teacher" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Teachers</option></select>
               <select id="filter-class" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Classes</option>
@@ -102,6 +102,9 @@
               </select>
               <select id="filter-chapter" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Chapters</option>
                 <option value="01">Ch 1</option><option value="02">Ch 2</option><option value="03">Ch 3</option><option value="04">Ch 4</option><option value="05">Ch 5</option><option value="06">Ch 6</option><option value="07">Ch 7</option>
+              </select>
+              <select id="filter-type" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Content</option>
+                <option value="notes">Notes</option><option value="lesson">Lesson Plan</option><option value="outcome">Learning Outcome</option><option value="tlm">TLM</option><option value="qa_very_short">Q&A - Very Short</option><option value="qa_short">Q&A - Short</option><option value="qa_long">Q&A - Long</option><option value="qa_objective">Q&A - Objective</option><option value="quiz">Interactive Quiz</option>
               </select>
             </div>
           </div>
@@ -244,6 +247,7 @@
     const sClass = document.getElementById('filter-class').value;
     const sSub = document.getElementById('filter-subject').value;
     const sChap = document.getElementById('filter-chapter').value;
+    const sType = document.getElementById('filter-type').value;
 
     const filteredData = liveData.filter(i => {
       const matchSearch = i.title.toLowerCase().includes(sSearch) || i.author.toLowerCase().includes(sSearch);
@@ -251,7 +255,9 @@
       const matchClass = sClass === "ALL" || i.class == sClass; // loose equality for string/num
       const matchSub = sSub === "ALL" || i.subject === sSub;
       const matchChap = sChap === "ALL" || i.chapter === sChap;
-      return matchSearch && matchTeacher && matchClass && matchSub && matchChap;
+      const matchType = sType === "ALL" || i.type === sType;
+      
+      return matchSearch && matchTeacher && matchClass && matchSub && matchChap && matchType;
     });
     
     renderLive(filteredData);
