@@ -224,16 +224,22 @@
     list.innerHTML = '';
     if (pendingData.length === 0) { list.innerHTML = `<div class="p-8 text-center text-emerald-500 font-bold">🎉 Inbox Zero! No pending submissions.</div>`; return; }
 
-    pendingData.forEach(item => {
+    pendingData.forEach((item, index) => {
+      const slNo = index + 1;
       list.innerHTML += `
         <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
-          <div>
-            <div class="flex gap-2 items-center mb-1">
-              <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600 uppercase">Reviewing</span>
-              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • ${item.typeName}</span>
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-bold text-sm">
+              ${slNo}
             </div>
-            <h3 class="font-bold text-lg text-dark">${item.title}</h3>
-            <p class="text-sm font-bold text-slate-500">👨‍🏫 By ${item.author}</p>
+            <div>
+              <div class="flex gap-2 items-center mb-1">
+                <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600 uppercase">Reviewing</span>
+                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • ${item.typeName}</span>
+              </div>
+              <h3 class="font-bold text-lg text-dark">${item.title}</h3>
+              <p class="text-sm font-bold text-slate-500">👨‍🏫 By ${item.author}</p>
+            </div>
           </div>
           <button onclick="openModal('${item.id}', 'pending')" class="px-6 py-2 bg-sky text-white font-bold rounded-xl shadow-md hover:bg-blue-600 transition">Review</button>
         </div>`;
@@ -268,16 +274,22 @@
     list.innerHTML = '';
     if (data.length === 0) { list.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold">No live items match this filter.</div>`; return; }
 
-    data.forEach(item => {
+    data.forEach((item, index) => {
+      const slNo = index + 1;
       list.innerHTML += `
         <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
-          <div>
-            <div class="flex gap-2 items-center mb-1">
-              <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700 uppercase">Live</span>
-              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • Ch ${item.chapter}</span>
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold text-sm">
+              ${slNo}
             </div>
-            <h3 class="font-bold text-lg text-dark">${item.title} <span class="text-sm font-normal text-slate-400">(${item.typeName})</span></h3>
-            <p class="text-sm font-bold text-slate-500">👨‍🏫 ${item.author}</p>
+            <div>
+              <div class="flex gap-2 items-center mb-1">
+                <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700 uppercase">Live</span>
+                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • Ch ${item.chapter}</span>
+              </div>
+              <h3 class="font-bold text-lg text-dark">${item.title} <span class="text-sm font-normal text-slate-400">(${item.typeName})</span></h3>
+              <p class="text-sm font-bold text-slate-500">👨‍🏫 ${item.author}</p>
+            </div>
           </div>
           <button onclick="openModal('${item.id}', 'live')" class="px-5 py-2 border border-slate-300 text-slate-600 font-bold rounded-xl shadow-sm hover:bg-slate-100 transition">Manage</button>
         </div>`;
