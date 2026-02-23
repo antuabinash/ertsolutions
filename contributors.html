@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Contributors – ERT Odisha</title>
+<title>Our Contributors Leaderboard – ERT Odisha</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
+<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF', emerald: '#06D6A0'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
 <style>
-  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; }
+  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; overflow-x: hidden; }
   .nav { display: flex; align-items: center; padding: 15px 5%; background: #ffffff; border-bottom: 1px solid #e8eef5; position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .teacher-card { transition: transform 0.2s, box-shadow 0.2s; }
-  .teacher-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(58,134,255,0.15); }
+  .teacher-card { transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+  .teacher-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(58,134,255,0.15); }
+  .rank-badge { position: absolute; top: -12px; right: -12px; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.2rem; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;}
 </style>
 </head>
 <body class="text-slate-700">
@@ -21,56 +22,98 @@
       <img src="logo.png" alt="Logo" class="h-8 hidden sm:block" onerror="this.style.display='none'">
       ERT <span class="text-sun">Odisha</span>
     </a>
-    <span class="bg-blue-50 text-sky px-4 py-1.5 rounded-full font-bold text-sm">Wall of Fame 🏆</span>
+    <span class="bg-blue-50 text-sky px-4 py-1.5 rounded-full font-bold text-sm">Leaderboard 🏆</span>
   </div>
 
   <main class="max-w-7xl mx-auto px-5 py-12 text-center">
     
-    <h1 class="font-baloo text-4xl md:text-5xl font-bold text-dark mb-4">Meet Our <span class="text-sky">Contributors</span></h1>
-    <p class="text-lg text-slate-500 mb-12 max-w-2xl mx-auto">Dedicated teachers from across Odisha working together to provide free, high-quality digital learning materials for every student.</p>
+    <h1 class="font-baloo text-4xl md:text-5xl font-bold text-dark mb-4">Meet Our <span class="text-sky">Top Contributors</span></h1>
+    <p class="text-lg text-slate-500 mb-12 max-w-2xl mx-auto">Dedicated teachers from across Odisha working together to provide free, high-quality digital learning materials. Ranked by total published content.</p>
 
-    <div id="loader" class="text-4xl animate-bounce mb-2">☁️ Fetching Teachers...</div>
+    <div id="loader" class="text-2xl animate-pulse mb-8 text-sky font-bold">
+      <div class="text-5xl mb-4">☁️</div>
+      Crunching the latest contribution data...
+    </div>
 
-    <!-- Contributors Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-left" id="contributors-grid">
-      <!-- Injected by JS -->
+    <!-- Leaderboard Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 text-left pt-4" id="contributors-grid">
+      <!-- Injected dynamically by JavaScript -->
     </div>
 
   </main>
 
 <script type="module">
-  import { getAllTeachers } from './firebase-engine.js';
+  // We import getLiveContentAll to calculate exact live stats without wasting reads!
+  import { getAllTeachers, getLiveContentAll } from './firebase-engine.js';
 
   async function loadContributors() {
     try {
-      const teachers = await getAllTeachers();
+      // 1. Fetch Teachers and ALL Live Content in parallel (Lightning fast, only 2 reads for the whole page!)
+      const [teachers, liveContent] = await Promise.all([
+        getAllTeachers(),
+        getLiveContentAll()
+      ]);
+      
       document.getElementById('loader').classList.add('hidden');
       const grid = document.getElementById('contributors-grid');
       
       if(teachers.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold">No contributors registered yet.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold text-xl">No contributors registered yet. Be the first!</div>`;
         return;
       }
 
-      teachers.forEach(t => {
-        // Fallback Avatar if they didn't upload one
+      // 2. Tally up the live content per teacher
+      const contributionCounts = {};
+      liveContent.forEach(item => {
+        if(item.author) {
+          contributionCounts[item.author] = (contributionCounts[item.author] || 0) + 1;
+        }
+      });
+
+      // 3. Map the counts to the teachers and SORT them descending
+      const rankedTeachers = teachers.map(t => {
+        return {
+          ...t,
+          liveCount: contributionCounts[t.name] || 0
+        };
+      }).sort((a, b) => b.liveCount - a.liveCount); // Highest count first
+
+      // 4. Render the UI
+      rankedTeachers.forEach((t, index) => {
+        const rank = index + 1;
         const avatar = t.pic || `https://api.dicebear.com/7.x/initials/svg?seed=${t.name}`;
         const dist = t.dist || "Odisha";
-        const block = t.block || "Teacher";
+        const block = t.block || "Educator";
+        
+        // Dynamic Ranking Badges
+        let rankHtml = '';
+        if (rank === 1) rankHtml = `<div class="rank-badge bg-yellow-400 text-white text-2xl">🥇</div>`;
+        else if (rank === 2) rankHtml = `<div class="rank-badge bg-slate-300 text-white text-xl">🥈</div>`;
+        else if (rank === 3) rankHtml = `<div class="rank-badge bg-amber-600 text-white text-xl">🥉</div>`;
+        else rankHtml = `<div class="rank-badge bg-slate-100 text-slate-500 text-sm">#${rank}</div>`;
 
         grid.innerHTML += `
-          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 teacher-card flex flex-col items-center text-center">
-            <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-inner">
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 teacher-card flex flex-col items-center text-center mt-4">
+            ${rankHtml}
+            
+            <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-inner -mt-10 bg-white">
               <img src="${avatar}" class="w-full h-full object-cover">
             </div>
-            <h3 class="font-baloo text-xl font-bold text-dark w-full truncate">${t.name}</h3>
-            <p class="text-sm font-bold text-sky uppercase tracking-wide mt-1">${block}</p>
-            <p class="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">📍 ${dist}</p>
+            
+            <h3 class="font-baloo text-xl font-bold text-dark w-full truncate px-2">${t.name}</h3>
+            <p class="text-xs font-bold text-sky uppercase tracking-wide mt-1">${block}</p>
+            <p class="text-xs text-slate-400 mt-1 mb-4 flex items-center justify-center gap-1">📍 ${dist}</p>
+            
+            <div class="w-full bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
+              <span class="text-2xl font-baloo font-bold ${t.liveCount > 0 ? 'text-emerald-500' : 'text-slate-400'}">${t.liveCount}</span>
+              <span class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider">Live Uploads</span>
+            </div>
           </div>
         `;
       });
+
     } catch (err) {
-      document.getElementById('loader').innerText = "Error loading contributors.";
+      document.getElementById('loader').innerText = "Error loading leaderboard data.";
       console.error(err);
     }
   }
