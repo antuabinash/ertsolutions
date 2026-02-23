@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ert-odisha-v3';
+const CACHE_NAME = 'ert-odisha-v4'; // Bumped to v4 to force update
 
 const ASSETS_TO_CACHE = [
   './',
@@ -6,6 +6,8 @@ const ASSETS_TO_CACHE = [
   './subjects.html',
   './chapters.html',
   './content.html',
+  './viewer.html',          // <-- ADDED
+  './firebase-engine.js',   // <-- ADDED (Crucial for offline database)
   './logo.png',
   './bg-image.jpg'
 ];
@@ -37,6 +39,12 @@ self.addEventListener('activate', event => {
 
 // 3. Fetch Event - NETWORK FIRST, FALLBACK TO CACHE
 self.addEventListener('fetch', event => {
+  // --- DO NOT CACHE FIREBASE DATABASE REQUESTS ---
+  // Firestore handles its own cache. Caching it here doubles the storage size!
+  if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('firebase')) {
+    return; // Let the browser handle Firebase requests directly
+  }
+
   event.respondWith(
     // Step A: Always try to get the newest file from GitHub (the network) first
     fetch(event.request)

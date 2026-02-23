@@ -114,40 +114,55 @@
     } else {
       document.getElementById('loader').classList.remove('hidden');
       
-      const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, contentType);
-      document.getElementById('loader').classList.add('hidden');
+      try {
+        // 🚀 FIREBASE 1-READ FETCH 🚀
+        const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, contentType);
+        document.getElementById('loader').classList.add('hidden');
 
-      if (!dbContent) {
-        document.getElementById('page-title').innerText = "Not Found";
+        if (!dbContent) {
+          document.getElementById('page-title').innerText = "Not Found";
+          document.getElementById('view-reading').classList.remove('hidden');
+          document.getElementById('reading-body').innerHTML = `
+            <div class="text-center p-8">
+              <h1 class="text-rose-500 text-3xl mb-2">Not Uploaded Yet</h1>
+              <p>Your teacher hasn't uploaded this chapter's material yet. Check back later!</p>
+            </div>`;
+          return;
+        }
+
+        document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
+        
+        // DISPLAY TEACHER NAME!
+        if(dbContent.author) {
+          document.getElementById('content-author').innerText = dbContent.author;
+          document.getElementById('author-badge').classList.remove('hidden');
+        }
+
+        if (contentType === 'quiz') {
+          quizData = dbContent.content; 
+          document.getElementById('view-quiz').classList.remove('hidden');
+          startQuiz();
+        } else {
+          document.getElementById('view-reading').classList.remove('hidden');
+          document.getElementById('reading-body').innerHTML = dbContent.content;
+          if(window.renderMathInElement) {
+            renderMathInElement(document.getElementById('reading-body'), {
+              delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
+            });
+          }
+        }
+      } catch (error) {
+        // ERROR HANDLING: If Mobile Network or Firebase fails
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('page-title').innerText = "Connection Error";
         document.getElementById('view-reading').classList.remove('hidden');
         document.getElementById('reading-body').innerHTML = `
           <div class="text-center p-8">
-            <h1 class="text-rose-500 text-3xl mb-2">Not Uploaded Yet</h1>
-            <p>Your teacher hasn't uploaded this chapter's material yet. Check back later!</p>
+            <h1 class="text-rose-500 text-3xl mb-2">Network Error</h1>
+            <p>We couldn't load the content. Please check your internet connection or try again later.</p>
+            <p class="text-xs text-slate-400 mt-4 break-words">Error details: ${error.message}</p>
+            <button onclick="location.reload()" class="mt-6 bg-sky text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-600 transition">Try Again</button>
           </div>`;
-        return;
-      }
-
-      document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
-      
-      // DISPLAY TEACHER NAME!
-      if(dbContent.author) {
-        document.getElementById('content-author').innerText = dbContent.author;
-        document.getElementById('author-badge').classList.remove('hidden');
-      }
-
-      if (contentType === 'quiz') {
-        quizData = dbContent.content; 
-        document.getElementById('view-quiz').classList.remove('hidden');
-        startQuiz();
-      } else {
-        document.getElementById('view-reading').classList.remove('hidden');
-        document.getElementById('reading-body').innerHTML = dbContent.content;
-        if(window.renderMathInElement) {
-          renderMathInElement(document.getElementById('reading-body'), {
-            delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
-          });
-        }
       }
     }
   }

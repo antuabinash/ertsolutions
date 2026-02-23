@@ -21,10 +21,17 @@ const firebaseConfig = {
   measurementId: "G-PRSYHJYPZX"
 };
 
+// 2. INITIALIZE FIREBASE & OFFLINE CACHING
 const app = initializeApp(firebaseConfig);
+
+// --- NEW FIX: LIMIT FIRESTORE CACHE TO 10MB ---
+// (The default is 40MB. Setting it to 10MB forces it to aggressively delete old cached images)
 const db = initializeFirestore(app, {
-  localCache: persistentLocalCache() 
+  localCache: persistentLocalCache({
+    cacheSizeBytes: 10485760 // 10 MB limit (10 * 1024 * 1024 bytes)
+  }) 
 });
+
 const storage = getStorage(app);
 const auth = getAuth(app); 
 
