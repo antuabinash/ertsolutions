@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Panel – ERT Odisha</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif'],}}}}
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; }
+  .ql-container { font-family: 'Nunito', sans-serif; font-size: 1rem; background: white; border-radius: 0 0 8px 8px; min-height: 200px;}
+  .ql-toolbar { background: #f8fafc; border-radius: 8px 8px 0 0; }
+  ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+</style>
+</head>
+<body class="text-slate-700">
+
+  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-sky p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+      <div class="text-5xl mb-4">👨‍🏫</div>
+      <h1 class="font-baloo text-3xl font-bold text-dark mb-2">Teacher Portal</h1>
+      <form id="login-form" class="space-y-4 mt-8">
+        <!-- Real Email and Password fields -->
+        <input type="text" id="teacher-name" placeholder="Display Name (e.g. Mr. Das)" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
+        <input type="email" id="teacher-email" placeholder="Teacher Email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
+        <input type="password" id="teacher-password" placeholder="Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
+        <button type="submit" id="login-btn" class="w-full bg-sky text-white font-bold py-3 rounded-xl shadow-lg hover:bg-blue-600">Secure Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-sky text-white rounded-lg flex items-center justify-center text-xl">📚</div>
+          <span class="font-baloo text-xl font-bold text-sky">ERT <span class="text-sun">Odisha</span> Panel</span>
+        </div>
+        <button onclick="logout()" class="text-sm font-bold text-slate-500 hover:text-rose-500">Logout</button>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+        <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4">1. Content Target</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()">
+            <option value="" disabled selected>Select Class</option>
+            <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option>
+            <option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option>
+          </select>
+          <select id="sel-subject" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Subject</option></select>
+          <select id="sel-chapter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Chapter</option></select>
+          <select id="sel-type" class="w-full px-4 py-3 rounded-xl border border-sky bg-blue-50 text-sky font-bold" onchange="renderEditor()">
+            <option value="" disabled selected>Choose Type...</option>
+            <option value="notes">📓 Notes</option><option value="lesson">📋 Lesson Plan</option>
+            <option value="outcome">📈 Learning Outcome</option><option value="tlm">🧩 TLM</option>
+            <option value="qa_very_short">⚡ Q&A - Very Short</option><option value="qa_short">📝 Q&A - Short</option>
+            <option value="qa_long">✍️ Q&A - Long</option><option value="qa_objective">🎯 Q&A - Objective (Text)</option>
+            <option value="quiz">🕹️ Interactive Quiz Game</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="editor-container" class="hidden bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4" id="editor-title">2. Add Content</h2>
+        <div id="dynamic-workspace"></div>
+        <div class="mt-8 flex justify-end pt-6 border-t">
+          <button id="save-btn" onclick="saveContent()" class="bg-sky text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-600 transition">💾 Submit to Admin</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all z-50"></div>
+
+<script type="module">
+  import { submitContent, uploadImage, loginUser, logoutUser } from './firebase-engine.js';
+
+  const commonSubjects = { odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa (EVS)', eng: 'English', sci: 'Science', soc: 'Social Science', hindi: 'Hindi', skt: 'Sanskrit' };
+  const classSubjectsMap = {
+    1: ['odia', 'math'], 2: ['odia', 'math'], 3: ['odia', 'math', 'paribesa', 'eng'], 4: ['odia', 'math', 'paribesa', 'eng'], 5: ['odia', 'math', 'paribesa', 'eng'],
+    6: ['odia', 'math', 'sci', 'soc', 'eng', 'hindi', 'skt'], 7: ['odia', 'math', 'sci', 'soc', 'eng', 'hindi', 'skt'], 8: ['odia', 'math', 'sci', 'soc', 'eng', 'hindi', 'skt']
+  };
+
+  let quillEditor = null;
+  let teacherDisplayName = "";
+
+  // --- REAL FIREBASE LOGIN ---
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('teacher-email').value;
+    const password = document.getElementById('teacher-password').value;
+    teacherDisplayName = document.getElementById('teacher-name').value;
+    const btn = document.getElementById('login-btn');
+
+    try {
+      btn.innerText = "Authenticating...";
+      await loginUser(email, password);
+      
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+    } catch(error) {
+      alert("Invalid Email/Password. Please check with your Admin.");
+      btn.innerText = "Secure Sign In";
+    }
+  });
+
+  window.logout = async () => {
+    await logoutUser();
+    location.reload();
+  };
+
+  window.updateSubjects = () => {
+    const classId = document.getElementById('sel-class').value;
+    const subSelect = document.getElementById('sel-subject');
+    const chapSelect = document.getElementById('sel-chapter');
+    subSelect.innerHTML = '<option value="" disabled selected>Select Subject</option>';
+    if (classId) {
+      classSubjectsMap[classId].forEach(subKey => { subSelect.innerHTML += `<option value="${subKey}">${commonSubjects[subKey]}</option>`; });
+      subSelect.disabled = false;
+      chapSelect.innerHTML = '<option value="" disabled selected>Select Chapter</option>';
+      for(let i=1; i<=10; i++) chapSelect.innerHTML += `<option value="${i<10?'0'+i:i}">Chapter ${i}</option>`;
+      chapSelect.disabled = false;
+    }
+  };
+
+  window.renderEditor = () => {
+    const type = document.getElementById('sel-type').value;
+    const typeText = document.getElementById('sel-type').options[document.getElementById('sel-type').selectedIndex].text;
+    document.getElementById('editor-container').classList.remove('hidden');
+    document.getElementById('editor-title').innerText = `2. Write ${typeText}`;
+    const workspace = document.getElementById('dynamic-workspace');
+    quillEditor = null;
+
+    if (type === 'quiz') {
+      workspace.innerHTML = `
+        <input type="text" id="content-title" placeholder="Quiz Title" class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none">
+        <textarea id="quiz-q" rows="2" placeholder="Question Text..." class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none"></textarea>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <input type="text" id="opt-a" placeholder="Option A" class="w-full px-4 py-2 border rounded-lg outline-none">
+          <input type="text" id="opt-b" placeholder="Option B" class="w-full px-4 py-2 border rounded-lg outline-none">
+          <input type="text" id="opt-c" placeholder="Option C" class="w-full px-4 py-2 border rounded-lg outline-none">
+          <input type="text" id="opt-d" placeholder="Option D" class="w-full px-4 py-2 border rounded-lg outline-none">
+        </div>
+        <label class="block font-bold mb-2">Correct Answer</label>
+        <select id="quiz-correct" class="px-4 py-2 border rounded-lg bg-emerald-50"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+      `;
+    } else if (type === 'tlm') {
+      workspace.innerHTML = `
+        <input type="text" id="content-title" placeholder="TLM Title" class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none">
+        <textarea id="tlm-desc" rows="3" placeholder="Instructions..." class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none"></textarea>
+        <input type="file" id="tlm-file" accept="image/*" class="w-full px-4 py-3 border border-sky border-dashed rounded-xl bg-blue-50 text-sky font-bold cursor-pointer">
+      `;
+    } else {
+      workspace.innerHTML = `
+        <input type="text" id="content-title" placeholder="Main Heading/Title" class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none">
+        <div id="quill-editor" class="bg-white"></div>
+      `;
+      quillEditor = new Quill('#quill-editor', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1,2,3,false] }],['bold','italic','underline'],[{ 'list': 'ordered'},{ 'list': 'bullet' }],['link','image','formula'],['clean']] } });
+    }
+  };
+
+  window.saveContent = async () => {
+    const btn = document.getElementById('save-btn');
+    btn.innerText = "⏳ Uploading to Cloud..."; btn.disabled = true;
+
+    const cls = document.getElementById('sel-class').value;
+    const sub = document.getElementById('sel-subject').value;
+    const chp = document.getElementById('sel-chapter').value;
+    const selType = document.getElementById('sel-type');
+    const type = selType.value;
+    const typeName = selType.options[selType.selectedIndex].text;
+    const title = document.getElementById('content-title')?.value || "Untitled";
+
+    let payload = null;
+
+    try {
+      if (type === 'quiz') {
+        payload = [{ 
+          q: document.getElementById('quiz-q').value, 
+          options: [document.getElementById('opt-a').value, document.getElementById('opt-b').value, document.getElementById('opt-c').value, document.getElementById('opt-d').value], 
+          answer: parseInt(document.getElementById('quiz-correct').value) 
+        }];
+      } else if (type === 'tlm') {
+        const file = document.getElementById('tlm-file').files[0];
+        let imgHtml = "";
+        if (file) {
+          const imgUrl = await uploadImage(file);
+          imgHtml = `<img src="${imgUrl}" alt="TLM" style="max-width:100%; border-radius:12px; margin-top:10px;">`;
+        }
+        payload = `<h1>${title}</h1><p>${document.getElementById('tlm-desc').value}</p>${imgHtml}`;
+      } else {
+        payload = quillEditor.root.innerHTML;
+      }
+
+      // Passes the Display Name the teacher typed in as Author
+      await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, payload);
+      
+      showToast("✅ Submitted to Admin for Review!");
+      setTimeout(() => location.reload(), 2000);
+    } catch (err) {
+      alert("Error saving: " + err.message);
+      btn.innerText = "💾 Submit to Admin"; btn.disabled = false;
+    }
+  };
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.remove('translate-y-20', 'opacity-0');
+    setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+  }
+</script>
+</body>
+</html>

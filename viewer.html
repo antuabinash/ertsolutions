@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Viewer – ERT Odisha</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffffff">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; } body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; }
+  .toolbar { display: flex; align-items: center; padding: 15px 5%; background: #ffffff; border-bottom: 1px solid #e8eef5; position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .back-btn { margin-right: 15px; color: #1A1A2E; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; border: none; cursor: pointer; }
+  .reading-content h1 { font-family: 'Baloo 2', cursive; font-size: 2rem; font-weight: 800; color: #1A1A2E; margin-bottom: 1rem; line-height: 1.2;}
+  .reading-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem;}
+  .reading-content p { font-size: 1.1rem; line-height: 1.8; color: #3D4A5C; margin-bottom: 1rem; }
+  .reading-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 1.1rem;}
+  .reading-content img { max-width: 100%; border-radius: 12px; margin: 1rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .qa-card { transition: transform 0.2s, box-shadow 0.2s; } .qa-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(58,134,255,0.15); }
+</style>
+</head>
+<body class="text-slate-700 pb-20">
+
+  <div class="toolbar">
+    <button type="button" class="back-btn" id="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="flex flex-col">
+      <h2 class="font-baloo text-xl font-bold text-dark leading-tight" id="page-title">Loading...</h2>
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wide" id="page-subtitle">Content</span>
+    </div>
+  </div>
+
+  <main class="max-w-4xl mx-auto px-5 py-8">
+    
+    <div id="loader" class="text-center p-12 hidden">
+      <div class="text-4xl animate-bounce mb-2">☁️</div>
+      <p class="font-bold text-sky">Fetching Content securely...</p>
+    </div>
+
+    <div id="view-reading" class="hidden bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 reading-content">
+      <div id="reading-body"></div>
+    </div>
+
+    <div id="view-qa-menu" class="hidden">
+      <h3 class="font-baloo text-2xl font-bold text-dark mb-6 text-center">Select Question Type</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a href="#type=qa_very_short" class="qa-card bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] p-6 rounded-2xl flex items-center gap-4 text-yellow-800">
+          <div class="text-4xl">⚡</div><div><h4 class="font-bold text-lg">Very Short Answer</h4><p class="text-sm opacity-80">ଅତି ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
+        <a href="#type=qa_short" class="qa-card bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-6 rounded-2xl flex items-center gap-4 text-emerald-800">
+          <div class="text-4xl">📝</div><div><h4 class="font-bold text-lg">Short Answer</h4><p class="text-sm opacity-80">ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
+        <a href="#type=qa_long" class="qa-card bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] p-6 rounded-2xl flex items-center gap-4 text-blue-800">
+          <div class="text-4xl">✍️</div><div><h4 class="font-bold text-lg">Long Answer</h4><p class="text-sm opacity-80">ଦୀର୍ଘ ଉତ୍ତର</p></div></a>
+        <a href="#type=qa_objective" class="qa-card bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] p-6 rounded-2xl flex items-center gap-4 text-purple-800">
+          <div class="text-4xl">🎯</div><div><h4 class="font-bold text-lg">Objective</h4><p class="text-sm opacity-80">ବସ୍ତୁନିଷ୍ଠ ପ୍ରଶ୍ନ</p></div></a>
+      </div>
+    </div>
+
+    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+      <div class="flex justify-between items-center mb-6">
+        <div class="bg-blue-100 text-sky px-4 py-1.5 rounded-full font-bold text-sm" id="quiz-progress"></div>
+        <div class="font-baloo text-xl font-bold text-[#FFBE0B] flex items-center gap-1">🏆 <span id="quiz-score">0</span></div>
+      </div>
+      <div class="bg-white p-6 md:p-8 rounded-3xl shadow-lg mb-6">
+        <h3 class="text-xl md:text-2xl font-bold text-dark mb-6" id="quiz-question">Loading...</h3>
+        <div class="flex flex-col gap-3" id="quiz-options"></div>
+      </div>
+      <div id="quiz-feedback" class="hidden text-center p-4 rounded-2xl font-bold text-lg mb-6 transition-all"></div>
+      <button id="quiz-next-btn" onclick="nextQuestion()" class="hidden w-full bg-sky text-white font-bold py-4 rounded-2xl text-lg shadow-lg">Next Question ➔</button>
+      
+      <div id="quiz-results" class="hidden bg-white p-8 rounded-3xl text-center shadow-lg">
+        <div class="text-6xl mb-4">🎉</div>
+        <h3 class="font-baloo text-3xl font-bold text-dark mb-2">Quiz Completed!</h3>
+        <p class="text-lg text-slate-500 mb-6">You scored <strong class="text-sky text-2xl" id="final-score"></strong></p>
+      </div>
+    </div>
+  </main>
+
+<script type="module">
+  import { fetchLiveContent } from './firebase-engine.js';
+
+  let classId, subjectKey, chapterNum, contentType;
+  let quizData = [];
+  
+  // Attach functions to window to support HTML onclick
+  window.nextQuestion = nextQuestion;
+  window.selectOption = selectOption;
+
+  async function parseURL() {
+    const hashString = window.location.hash.substring(1);
+    const urlParams = new URLSearchParams(hashString);
+    classId = urlParams.get('class') || '1';
+    subjectKey = urlParams.get('subject') || 'odia';
+    chapterNum = urlParams.get('chapter') || '01';
+    contentType = urlParams.get('type') || 'notes';
+
+    document.getElementById('page-subtitle').innerText = `Class ${classId} • Ch ${chapterNum}`;
+    
+    // Handle UI & Fetch logic
+    hideAllViews();
+    if (contentType === 'qa') {
+      document.getElementById('page-title').innerText = "Question & Answer";
+      document.getElementById('view-qa-menu').classList.remove('hidden');
+    } else {
+      document.getElementById('loader').classList.remove('hidden');
+      
+      // 🚀 FIREBASE 1-READ FETCH 🚀
+      const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, contentType);
+      document.getElementById('loader').classList.add('hidden');
+
+      if (!dbContent) {
+        document.getElementById('page-title').innerText = "Not Found";
+        document.getElementById('view-reading').classList.remove('hidden');
+        document.getElementById('reading-body').innerHTML = `
+          <div class="text-center p-8">
+            <h1 class="text-rose-500 text-3xl mb-2">Not Uploaded Yet</h1>
+            <p>Your teacher hasn't uploaded this chapter's material yet. Check back later!</p>
+          </div>`;
+        return;
+      }
+
+      document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
+
+      if (contentType === 'quiz') {
+        quizData = dbContent.content; // Expecting Array from teacher panel
+        document.getElementById('view-quiz').classList.remove('hidden');
+        startQuiz();
+      } else {
+        document.getElementById('view-reading').classList.remove('hidden');
+        document.getElementById('reading-body').innerHTML = dbContent.content;
+        // Render Math if KaTeX is loaded
+        if(window.renderMathInElement) {
+          renderMathInElement(document.getElementById('reading-body'), {
+            delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
+          });
+        }
+      }
+    }
+  }
+
+  document.getElementById('back-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (contentType.startsWith('qa_')) {
+      window.location.hash = `class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=qa`;
+    } else {
+      window.location.replace(`content.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}`);
+    }
+  });
+
+  window.addEventListener('hashchange', parseURL);
+
+  function hideAllViews() {
+    document.getElementById('view-reading').classList.add('hidden');
+    document.getElementById('view-qa-menu').classList.add('hidden');
+    document.getElementById('view-quiz').classList.add('hidden');
+  }
+
+  // --- QUIZ LOGIC ---
+  let currentQ = 0, score = 0, quizAnswered = false;
+
+  function startQuiz() {
+    currentQ = 0; score = 0; quizAnswered = false;
+    document.getElementById('quiz-results').classList.add('hidden');
+    document.getElementById('quiz-question').parentElement.classList.remove('hidden');
+    document.getElementById('quiz-score').innerText = score;
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    quizAnswered = false;
+    const qData = quizData[currentQ];
+    document.getElementById('quiz-progress').innerText = `Q ${currentQ + 1} of ${quizData.length}`;
+    document.getElementById('quiz-question').innerText = qData.q;
+    
+    const optionsContainer = document.getElementById('quiz-options');
+    optionsContainer.innerHTML = '';
+    
+    qData.options.forEach((opt, index) => {
+      const btn = document.createElement('button');
+      btn.className = "w-full text-left px-6 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold hover:border-sky transition quiz-opt-btn";
+      btn.innerText = opt;
+      btn.onclick = () => window.selectOption(index, btn);
+      optionsContainer.appendChild(btn);
+    });
+
+    document.getElementById('quiz-feedback').classList.add('hidden');
+    document.getElementById('quiz-next-btn').classList.add('hidden');
+  }
+
+  function selectOption(selectedIndex, btnElement) {
+    if (quizAnswered) return; 
+    quizAnswered = true;
+    const correctIndex = quizData[currentQ].answer;
+    const allBtns = document.querySelectorAll('.quiz-opt-btn');
+    const feedback = document.getElementById('quiz-feedback');
+
+    allBtns.forEach((btn, idx) => {
+      btn.classList.remove('hover:border-sky');
+      if (idx === correctIndex) btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+      else if (idx === selectedIndex) btn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800');
+      else btn.classList.add('opacity-50');
+    });
+
+    feedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-700', 'bg-rose-100', 'text-rose-700');
+    if (selectedIndex === correctIndex) {
+      score += 10;
+      document.getElementById('quiz-score').innerText = score;
+      feedback.innerText = "✅ Correct Answer!";
+      feedback.classList.add('bg-emerald-100', 'text-emerald-700');
+    } else {
+      feedback.innerText = "❌ Incorrect!";
+      feedback.classList.add('bg-rose-100', 'text-rose-700');
+    }
+    document.getElementById('quiz-next-btn').classList.remove('hidden');
+  }
+
+  function nextQuestion() {
+    currentQ++;
+    if (currentQ < quizData.length) {
+      loadQuestion();
+    } else {
+      document.getElementById('quiz-question').parentElement.classList.add('hidden');
+      document.getElementById('quiz-feedback').classList.add('hidden');
+      document.getElementById('quiz-next-btn').classList.add('hidden');
+      document.getElementById('quiz-results').classList.remove('hidden');
+      document.getElementById('final-score').innerText = `${score} Points`;
+    }
+  }
+
+  parseURL();
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+</script>
+
+</body>
+</html>

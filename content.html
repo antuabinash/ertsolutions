@@ -128,86 +128,8 @@
   </div>
   
   <section class="classes-section">
-    <div class="classes-grid">
-      
-      <!-- TILE 1: Notes -->
-      <a href="#" class="class-card c1" style="animation-delay: 0.0s">
-        <div class="cc-top">
-          <div class="cc-emoji">📓</div>
-          <div class="cc-class">Study Notes</div>
-          <div class="cc-odia">ନୋଟ</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
-      <!-- TILE 2: Lesson Plan -->
-      <a href="#" class="class-card c2" style="animation-delay: 0.1s">
-        <div class="cc-top">
-          <div class="cc-emoji">📋</div>
-          <div class="cc-class">Lesson Plan</div>
-          <div class="cc-odia">ପାଠ୍ୟ ଯୋଜନା</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
-      <!-- TILE 3: Q & A -->
-      <a href="#" class="class-card c3" style="animation-delay: 0.2s">
-        <div class="cc-top">
-          <div class="cc-emoji">💡</div>
-          <div class="cc-class">Question & Answer</div>
-          <div class="cc-odia">ପ୍ରଶ୍ନ ଉତ୍ତର</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
-      <!-- TILE 4: Quiz -->
-      <a href="#" class="class-card c5" style="animation-delay: 0.3s">
-        <div class="cc-top">
-          <div class="cc-emoji">🎯</div>
-          <div class="cc-class">Practice Quiz</div>
-          <div class="cc-odia">କ୍ୱିଜ୍</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
-      <!-- TILE 5: Learning Outcome -->
-      <a href="#" class="class-card c6" style="animation-delay: 0.4s">
-        <div class="cc-top">
-          <div class="cc-emoji">📈</div>
-          <div class="cc-class">Learning Outcome</div>
-          <div class="cc-odia">ଶିକ୍ଷଣ ଫଳାଫଳ</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
-      <!-- TILE 6: TLM -->
-      <a href="#" class="class-card c4" style="animation-delay: 0.5s">
-        <div class="cc-top">
-          <div class="cc-emoji">🧩</div>
-          <div class="cc-class">TLM</div>
-          <div class="cc-odia">ଶିକ୍ଷଣ ଉପକରଣ</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-
+    <div class="classes-grid" id="content-grid">
+      <!-- We will generate these dynamically using JS to pass parameters -->
     </div>
   </section>
 
@@ -237,6 +159,37 @@
   
   document.getElementById('page-title').innerText = `Chapter ${chapterNum}`;
   document.getElementById('page-subtitle').innerText = `Class ${classId} • ${subjectName}`;
+
+  // --- DYNAMICALLY RENDER CONTENT TILES WITH CORRECT LINKS ---
+  const contentTypes = [
+    { id: 'notes', emoji: '📓', eng: 'Study Notes', odia: 'ନୋଟ', color: 'c1' },
+    { id: 'lesson', emoji: '📋', eng: 'Lesson Plan', odia: 'ପାଠ୍ୟ ଯୋଜନା', color: 'c2' },
+    { id: 'qa', emoji: '💡', eng: 'Question & Answer', odia: 'ପ୍ରଶ୍ନ ଉତ୍ତର', color: 'c3' },
+    { id: 'quiz', emoji: '🎯', eng: 'Practice Quiz', odia: 'କ୍ୱିଜ୍', color: 'c5' },
+    { id: 'outcome', emoji: '📈', eng: 'Learning Outcome', odia: 'ଶିକ୍ଷଣ ଫଳାଫଳ', color: 'c6' },
+    { id: 'tlm', emoji: '🧩', eng: 'TLM', odia: 'ଶିକ୍ଷଣ ଉପକରଣ', color: 'c4' }
+  ];
+
+  const grid = document.getElementById('content-grid');
+  contentTypes.forEach((type, index) => {
+    const delay = index * 0.1;
+    // Link passes ALL data to viewer.html
+    const link = `viewer.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=${type.id}`;
+    
+    grid.insertAdjacentHTML('beforeend', `
+      <a href="${link}" class="class-card ${type.color}" style="animation-delay: ${delay}s">
+        <div class="cc-top">
+          <div class="cc-emoji">${type.emoji}</div>
+          <div class="cc-class">${type.eng}</div>
+          <div class="cc-odia">${type.odia}</div>
+        </div>
+        <div class="cc-bottom">
+          <span>Open</span>
+          <span class="cc-arrow">→</span>
+        </div>
+      </a>
+    `);
+  });
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
