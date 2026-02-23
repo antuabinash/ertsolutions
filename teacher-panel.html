@@ -33,7 +33,6 @@
       <p class="text-slate-500 mb-6 text-sm" id="auth-subtitle">Welcome back! Sign in to continue.</p>
       
       <form id="auth-form" class="space-y-4 mt-4">
-        <!-- FIXED: Removed 'required' attribute from the hidden field to prevent form submission blocking -->
         <input type="text" id="auth-name" placeholder="Display Name (e.g. Mr. Das)" class="hidden w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
         
         <input type="email" id="auth-email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
@@ -69,12 +68,22 @@
       
       <!-- TAB 1: CONTENT ENTRY -->
       <div id="tab-entry" class="block">
+        
+        <!-- DASHBOARD STATS -->
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
-            <div class="text-3xl">🌟</div><div><p class="text-xs font-bold text-emerald-600 uppercase">Live Published</p><h4 class="font-baloo text-2xl font-bold text-emerald-800" id="stat-my-live">...</h4></div>
+            <div class="text-3xl">🌟</div>
+            <div>
+              <p class="text-xs font-bold text-emerald-600 uppercase">Live Published</p>
+              <h4 class="font-baloo text-2xl font-bold text-emerald-800" id="stat-my-live">0</h4>
+            </div>
           </div>
           <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-center gap-3">
-            <div class="text-3xl">⏳</div><div><p class="text-xs font-bold text-orange-600 uppercase">In Review</p><h4 class="font-baloo text-2xl font-bold text-orange-800" id="stat-my-pending">...</h4></div>
+            <div class="text-3xl">⏳</div>
+            <div>
+              <p class="text-xs font-bold text-orange-600 uppercase">In Review</p>
+              <h4 class="font-baloo text-2xl font-bold text-orange-800" id="stat-my-pending">0</h4>
+            </div>
           </div>
         </div>
 
@@ -183,7 +192,6 @@
     document.getElementById('toggle-text').innerText = isLoginMode ? "New teacher?" : "Already have an account?";
     document.getElementById('toggle-btn').innerText = isLoginMode ? "Sign Up Here" : "Log In Here";
     
-    // JS controls the requirement so it doesn't break standard HTML5 validation
     if(isLoginMode) {
       document.getElementById('auth-name').classList.add('hidden');
       document.getElementById('auth-name').required = false;
@@ -239,22 +247,34 @@
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     
-    const profile = await getTeacherProfile(user.uid);
-    teacherDisplayName = profile?.name || "Teacher";
-    
-    document.getElementById('prof-display-name').innerText = teacherDisplayName;
-    document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
-    document.getElementById('prof-name').value = teacherDisplayName;
-    if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
-    if(profile?.block) document.getElementById('prof-block').value = profile.block;
-    if(profile?.pic) {
-      profileBase64 = profile.pic;
-      document.getElementById('prof-pic-preview').src = profile.pic;
-    }
+    try {
+      const profile = await getTeacherProfile(user.uid);
+      teacherDisplayName = profile?.name || localStorage.getItem('ert_teacher_name') || "Teacher";
+      
+      // Setup UI text elements
+      document.getElementById('prof-display-name').innerText = teacherDisplayName;
+      document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
+      document.getElementById('prof-name').value = teacherDisplayName;
+      if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
+      if(profile?.block) document.getElementById('prof-block').value = profile.block;
+      if(profile?.pic) {
+        profileBase64 = profile.pic;
+        document.getElementById('prof-pic-preview').src = profile.pic;
+      }
 
-    const stats = await getTeacherStats(teacherDisplayName);
-    document.getElementById('stat-my-live').innerText = stats.live;
-    document.getElementById('stat-my-pending').innerText = stats.pending;
+      // Robust attempt to load teacher stats
+      try {
+        const stats = await getTeacherStats(teacherDisplayName);
+        document.getElementById('stat-my-live').innerText = stats.live !== undefined ? stats.live : "0";
+        document.getElementById('stat-my-pending').innerText = stats.pending !== undefined ? stats.pending : "0";
+      } catch (statsErr) {
+        console.error("Failed to load stats:", statsErr);
+        document.getElementById('stat-my-live').innerText = "0";
+        document.getElementById('stat-my-pending').innerText = "0";
+      }
+    } catch (e) {
+      console.error("Dashboard Loading Error:", e);
+    }
   }
 
   window.logout = async () => { await logoutUser(); location.reload(); };
@@ -273,6 +293,8 @@
     btn.innerText = "Saving...";
     
     teacherDisplayName = document.getElementById('prof-name').value;
+    localStorage.setItem('ert_teacher_name', teacherDisplayName);
+    
     const data = {
       name: teacherDisplayName,
       dist: document.getElementById('prof-dist').value,
@@ -280,16 +302,22 @@
       pic: profileBase64
     };
 
-    await saveTeacherProfile(auth.currentUser.uid, data);
-    document.getElementById('prof-display-name').innerText = teacherDisplayName;
-    document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
-    
-    const stats = await getTeacherStats(teacherDisplayName);
-    document.getElementById('stat-my-live').innerText = stats.live;
-    document.getElementById('stat-my-pending').innerText = stats.pending;
+    try {
+      await saveTeacherProfile(auth.currentUser.uid, data);
+      document.getElementById('prof-display-name').innerText = teacherDisplayName;
+      document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
+      
+      // Re-fetch stats using the newly updated profile name
+      const stats = await getTeacherStats(teacherDisplayName);
+      document.getElementById('stat-my-live').innerText = stats.live !== undefined ? stats.live : "0";
+      document.getElementById('stat-my-pending').innerText = stats.pending !== undefined ? stats.pending : "0";
 
-    btn.innerText = "Save Profile";
-    showToast("✅ Profile Updated Successfully!");
+      btn.innerText = "Save Profile";
+      showToast("✅ Profile Updated Successfully!");
+    } catch(err) {
+      alert("Error saving profile: " + err.message);
+      btn.innerText = "Save Profile";
+    }
   });
 
   // --- EDITOR LOGIC ---
@@ -383,8 +411,20 @@
 
       await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, payload);
       
+      // Visually increment the pending count right away so it reflects without page reload
+      const pendingEl = document.getElementById('stat-my-pending');
+      pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
+      
       showToast("✅ Submitted to Admin for Review!");
-      setTimeout(() => location.reload(), 2000);
+      
+      // Instead of refreshing, clear the form gracefully
+      setTimeout(() => {
+        btn.innerText = "💾 Submit to Admin";
+        btn.disabled = false;
+        document.getElementById('editor-container').classList.add('hidden');
+        document.getElementById('sel-type').value = "";
+      }, 1500);
+
     } catch (err) {
       alert("Error saving: " + err.message);
       btn.innerText = "💾 Submit to Admin"; btn.disabled = false;
