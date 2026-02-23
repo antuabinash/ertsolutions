@@ -39,6 +39,11 @@
 
   <main class="max-w-4xl mx-auto px-5 py-8">
     
+    <!-- AUTHOR RECOGNITION BADGE (Injected dynamically) -->
+    <div id="author-badge" class="hidden mb-6 inline-flex items-center gap-2 bg-blue-50 text-sky px-4 py-2 rounded-xl text-sm font-bold border border-blue-100 shadow-sm">
+      👨‍🏫 Contributed by: <span id="content-author">Teacher Name</span>
+    </div>
+
     <div id="loader" class="text-center p-12 hidden">
       <div class="text-4xl animate-bounce mb-2">☁️</div>
       <p class="font-bold text-sky">Fetching Content securely...</p>
@@ -88,7 +93,6 @@
   let classId, subjectKey, chapterNum, contentType;
   let quizData = [];
   
-  // Attach functions to window to support HTML onclick
   window.nextQuestion = nextQuestion;
   window.selectOption = selectOption;
 
@@ -101,8 +105,8 @@
     contentType = urlParams.get('type') || 'notes';
 
     document.getElementById('page-subtitle').innerText = `Class ${classId} • Ch ${chapterNum}`;
+    document.getElementById('author-badge').classList.add('hidden'); // Reset author badge
     
-    // Handle UI & Fetch logic
     hideAllViews();
     if (contentType === 'qa') {
       document.getElementById('page-title').innerText = "Question & Answer";
@@ -110,7 +114,6 @@
     } else {
       document.getElementById('loader').classList.remove('hidden');
       
-      // 🚀 FIREBASE 1-READ FETCH 🚀
       const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, contentType);
       document.getElementById('loader').classList.add('hidden');
 
@@ -126,15 +129,20 @@
       }
 
       document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
+      
+      // DISPLAY TEACHER NAME!
+      if(dbContent.author) {
+        document.getElementById('content-author').innerText = dbContent.author;
+        document.getElementById('author-badge').classList.remove('hidden');
+      }
 
       if (contentType === 'quiz') {
-        quizData = dbContent.content; // Expecting Array from teacher panel
+        quizData = dbContent.content; 
         document.getElementById('view-quiz').classList.remove('hidden');
         startQuiz();
       } else {
         document.getElementById('view-reading').classList.remove('hidden');
         document.getElementById('reading-body').innerHTML = dbContent.content;
-        // Render Math if KaTeX is loaded
         if(window.renderMathInElement) {
           renderMathInElement(document.getElementById('reading-body'), {
             delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]

@@ -24,9 +24,12 @@
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
       <div class="text-5xl mb-4">🛡️</div>
       <h1 class="font-baloo text-3xl font-bold text-dark mb-2">Admin Portal</h1>
-      <form id="login-form" class="space-y-4 mt-8">
-        <input type="password" placeholder="Admin Passcode" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" value="admin123">
-        <button type="submit" class="w-full bg-dark text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition shadow-lg">Access Secure DB</button>
+      <p class="text-slate-500 mb-6 text-sm">Secure Real-Time Login</p>
+      <form id="login-form" class="space-y-4">
+        <!-- Locked to the specific Admin Email -->
+        <input type="email" id="admin-email" placeholder="Admin Email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none" value="admin@ertodisha.in" readonly>
+        <input type="password" id="admin-password" placeholder="Admin Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
+        <button type="submit" id="login-btn" class="w-full bg-sky text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition shadow-lg">Access Secure DB</button>
       </form>
     </div>
   </div>
@@ -38,7 +41,7 @@
           <div class="w-10 h-10 bg-dark text-white rounded-lg flex items-center justify-center text-xl">🛡️</div>
           <span class="font-baloo text-xl font-bold text-dark">ERT <span class="text-sky">Odisha</span> Admin</span>
         </div>
-        <button onclick="location.reload()" class="text-sm font-bold text-slate-500 hover:text-rose">Logout</button>
+        <button onclick="logout()" class="text-sm font-bold text-slate-500 hover:text-rose">Logout</button>
       </div>
     </header>
 
@@ -84,19 +87,43 @@
     </div>
   </div>
 
+  <div id="toast" class="fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
+
 <script type="module">
-  import { getPendingContent, approveContent, rejectContent } from './firebase-engine.js';
+  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser } from './firebase-engine.js';
 
   let pendingData = [];
   let currentItem = null;
   let adminQuill = null;
 
-  document.getElementById('login-form').addEventListener('submit', (e) => {
+  // --- REAL FIREBASE LOGIN ---
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    window.fetchData();
+    const email = document.getElementById('admin-email').value;
+    const password = document.getElementById('admin-password').value;
+    const btn = document.getElementById('login-btn');
+
+    if(email !== 'admin@ertodisha.in') {
+      return alert("Unauthorized Email Address.");
+    }
+
+    try {
+      btn.innerText = "Authenticating...";
+      await loginUser(email, password);
+      
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      window.fetchData();
+    } catch(error) {
+      alert("Invalid Password or Account not created in Firebase yet.");
+      btn.innerText = "Access Secure DB";
+    }
   });
+
+  window.logout = async () => {
+    await logoutUser();
+    location.reload();
+  };
 
   window.fetchData = async () => {
     document.getElementById('submission-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching securely from cloud...</div>`;
@@ -129,7 +156,6 @@
     document.getElementById('modal-author').innerText = currentItem.author;
     document.getElementById('modal-id').innerText = currentItem.id;
     
-    // Check if Quiz JSON or HTML
     if (currentItem.type === 'quiz') {
       document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(currentItem.content, null, 2)}</pre>`;
     } else {
@@ -171,6 +197,7 @@
     await approveContent(currentItem);
     window.closeModal();
     window.fetchData();
+    showToast("✅ Content Approved & Pushed Live!", "bg-emerald-500");
   };
 
   window.rejectAction = async () => {
@@ -178,8 +205,17 @@
       await rejectContent(currentItem.id);
       window.closeModal();
       window.fetchData();
+      showToast("❌ Content Rejected and Deleted", "bg-rose-500");
     }
   };
+
+  function showToast(message, bgColorClass) {
+    const toast = document.getElementById('toast');
+    toast.className = `fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50 ${bgColorClass}`;
+    toast.innerText = message;
+    setTimeout(() => toast.classList.remove('translate-y-20', 'opacity-0'), 100);
+    setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+  }
 </script>
 </body>
 </html>
