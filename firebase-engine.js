@@ -1,14 +1,13 @@
-// firebase-engine.js - Centralized Modern Database Logic
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
-  getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, initializeFirestore, persistentLocalCache 
+  getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, initializeFirestore, persistentLocalCache,
+  getCountFromServer, query, where 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { 
   getStorage, ref, uploadBytes, getDownloadURL 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { 
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut 
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -21,39 +20,63 @@ const firebaseConfig = {
   measurementId: "G-PRSYHJYPZX"
 };
 
-// 2. INITIALIZE FIREBASE & OFFLINE CACHING
 const app = initializeApp(firebaseConfig);
-
-// --- NEW FIX: LIMIT FIRESTORE CACHE TO 10MB ---
-// (The default is 40MB. Setting it to 10MB forces it to aggressively delete old cached images)
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    cacheSizeBytes: 10485760 // 10 MB limit (10 * 1024 * 1024 bytes)
-  }) 
-});
-
+const db = initializeFirestore(app, { localCache: persistentLocalCache({ cacheSizeBytes: 10485760 }) });
 const storage = getStorage(app);
-const auth = getAuth(app); 
+export const auth = getAuth(app); 
 
 // ==========================================
-// 🔐 AUTHENTICATION FUNCTIONS
+// 🔐 AUTHENTICATION & PROFILES
 // ==========================================
 export async function loginUser(email, password) {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+  return await signInWithEmailAndPassword(auth, email, password);
 }
 
 export async function registerUser(email, password) {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
+  return await createUserWithEmailAndPassword(auth, email, password);
 }
 
 export async function logoutUser() {
   await signOut(auth);
 }
 
+export async function saveTeacherProfile(uid, profileData) {
+  await setDoc(doc(db, "Teachers", uid), profileData, { merge: true });
+}
+
+export async function getTeacherProfile(uid) {
+  const snap = await getDoc(doc(db, "Teachers", uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function getAllTeachers() {
+  const snap = await getDocs(collection(db, "Teachers"));
+  let teachers = [];
+  snap.forEach(d => teachers.push(d.data()));
+  return teachers;
+}
+
 // ==========================================
-// 🚀 DATABASE FUNCTIONS
+// 🚀 SMART STATS (1-Read Optimized)
+// ==========================================
+export async function getAdminStats() {
+  const pendingSnap = await getCountFromServer(collection(db, "Pending_Content"));
+  const liveSnap = await getCountFromServer(collection(db, "Live_Content"));
+  return { pending: pendingSnap.data().count, live: liveSnap.data().count };
+}
+
+export async function getTeacherStats(authorName) {
+  if (!authorName) return { pending: 0, live: 0 };
+  const pendingQ = query(collection(db, "Pending_Content"), where("author", "==", authorName));
+  const liveQ = query(collection(db, "Live_Content"), where("author", "==", authorName));
+  
+  const pSnap = await getCountFromServer(pendingQ);
+  const lSnap = await getCountFromServer(liveQ);
+  return { pending: pSnap.data().count, live: lSnap.data().count };
+}
+
+// ==========================================
+// 🚀 CONTENT DATABASE FUNCTIONS
 // ==========================================
 export function generateDocId(classId, subject, chapter, type) {
   return `class${classId}_${subject}_ch${chapter}_${type}`;
@@ -61,12 +84,9 @@ export function generateDocId(classId, subject, chapter, type) {
 
 export async function submitContent(classId, subject, chapter, type, typeName, title, author, contentPayload) {
   const docId = generateDocId(classId, subject, chapter, type);
-  const docRef = doc(db, "Pending_Content", docId);
-  
-  await setDoc(docRef, {
+  await setDoc(doc(db, "Pending_Content", docId), {
     id: docId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
-    title: title, author: author, content: contentPayload,
-    timestamp: new Date().getTime() 
+    title: title, author: author, content: contentPayload, timestamp: new Date().getTime() 
   });
 }
 
@@ -78,9 +98,8 @@ export async function getPendingContent() {
 }
 
 export async function approveContent(pendingItem) {
-  const docId = pendingItem.id;
-  await setDoc(doc(db, "Live_Content", docId), pendingItem); 
-  await deleteDoc(doc(db, "Pending_Content", docId)); 
+  await setDoc(doc(db, "Live_Content", pendingItem.id), pendingItem); 
+  await deleteDoc(doc(db, "Pending_Content", pendingItem.id)); 
 }
 
 export async function rejectContent(docId) {
@@ -88,12 +107,6 @@ export async function rejectContent(docId) {
 }
 
 export async function fetchLiveContent(classId, subject, chapter, type) {
-  const docId = generateDocId(classId, subject, chapter, type);
-  const docRef = doc(db, "Live_Content", docId);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return docSnap.data(); 
-  } else {
-    return null; 
-  }
+  const docSnap = await getDoc(doc(db, "Live_Content", generateDocId(classId, subject, chapter, type)));
+  return docSnap.exists() ? docSnap.data() : null; 
 }

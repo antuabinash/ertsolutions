@@ -27,7 +27,6 @@
       <p class="text-slate-500 mb-6 text-sm">Logging in as <strong class="text-dark">admin@ertodisha.in</strong></p>
       
       <form id="login-form" class="space-y-4">
-        <!-- We only ask for the password to keep it fast and secure -->
         <input type="password" id="admin-password" placeholder="Admin Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-center">
         <button type="submit" id="login-btn" class="w-full bg-sky text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition shadow-lg">Access Secure DB</button>
       </form>
@@ -46,10 +45,30 @@
     </header>
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+      
+      <!-- SMART SYSTEM STATS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div><p class="text-sm text-slate-500 font-bold uppercase">Total Live Content</p><h3 class="font-baloo text-4xl font-bold text-emerald" id="stat-live">...</h3></div>
+          <div class="text-5xl opacity-20">✅</div>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div><p class="text-sm text-slate-500 font-bold uppercase">Pending Approvals</p><h3 class="font-baloo text-4xl font-bold text-orange-500" id="stat-pending">...</h3></div>
+          <div class="text-5xl opacity-20">⏳</div>
+        </div>
+      </div>
+
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-50 gap-4">
           <h2 class="font-baloo text-xl font-bold text-dark">Submissions Awaiting Approval</h2>
-          <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">🔄 Refresh</button>
+          
+          <div class="flex gap-4 w-full md:w-auto">
+            <!-- IN-MEMORY FILTER DROPDOWN -->
+            <select id="teacher-filter" class="px-4 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold text-slate-600 bg-white flex-1" onchange="applyFilter()">
+              <option value="ALL">Show All Teachers</option>
+            </select>
+            <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 whitespace-nowrap">🔄 Refresh</button>
+          </div>
         </div>
         <div class="divide-y border-slate-100" id="submission-list"></div>
       </div>
@@ -64,28 +83,20 @@
         <button onclick="closeModal()" class="text-2xl text-slate-400">&times;</button>
       </div>
       <div class="p-6 overflow-y-auto flex-1">
-        
-        <!-- TEACHER RECOGNITION BADGE -->
         <div class="inline-flex items-center gap-2 bg-blue-50 text-sky px-3 py-1.5 rounded-lg text-sm font-bold mb-4 border border-blue-100">
           👨‍🏫 Authored by: <span id="modal-author">Teacher Name</span>
         </div>
-
         <h2 class="text-2xl font-bold text-dark mb-4" id="modal-title">Title</h2>
-        
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
           <div id="modal-content-view" class="prose max-w-none"></div>
           <div id="modal-content-edit" class="hidden"><div id="admin-quill" class="bg-white"></div></div>
         </div>
       </div>
-      
-      <!-- View Footer -->
       <div id="modal-footer-view" class="px-6 py-4 border-t flex justify-end gap-4 bg-slate-50 rounded-b-2xl">
         <button onclick="rejectAction()" class="px-6 py-2 rounded-xl font-bold text-rose border border-rose-200">Reject & Delete</button>
         <button onclick="enableEditMode()" class="px-6 py-2 rounded-xl font-bold text-sky border border-blue-200">✏️ Edit HTML</button>
         <button id="approve-btn" onclick="approveAction()" class="px-6 py-2 rounded-xl font-bold text-white bg-emerald shadow-lg hover:bg-emerald-600 transition">Approve & Push Live</button>
       </div>
-      
-      <!-- Edit Footer -->
       <div id="modal-footer-edit" class="hidden px-6 py-4 border-t flex justify-end gap-4 bg-slate-50 rounded-b-2xl">
         <button onclick="cancelEdit()" class="px-6 py-2 rounded-xl font-bold text-slate-500 border border-slate-300">Cancel Edit</button>
         <button onclick="saveEdit()" class="px-6 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Edit</button>
@@ -96,23 +107,21 @@
   <div id="toast" class="fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
 
 <script type="module">
-  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser } from './firebase-engine.js';
+  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser, getAdminStats } from './firebase-engine.js';
 
   let pendingData = [];
   let currentItem = null;
   let adminQuill = null;
 
-  // --- REAL FIREBASE LOGIN ---
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = 'admin@ertodisha.in'; // Hardcoded for security
+    const email = 'admin@ertodisha.in'; 
     const password = document.getElementById('admin-password').value;
     const btn = document.getElementById('login-btn');
 
     try {
       btn.innerText = "Authenticating...";
       await loginUser(email, password);
-      
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
       window.fetchData();
@@ -122,23 +131,39 @@
     }
   });
 
-  window.logout = async () => {
-    await logoutUser();
-    location.reload();
-  };
+  window.logout = async () => { await logoutUser(); location.reload(); };
 
   window.fetchData = async () => {
     document.getElementById('submission-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching securely from cloud...</div>`;
-    pendingData = await getPendingContent();
-    renderList();
+    
+    // Fetch Data & Stats simultaneously
+    const [data, stats] = await Promise.all([getPendingContent(), getAdminStats()]);
+    pendingData = data;
+    
+    document.getElementById('stat-live').innerText = stats.live;
+    document.getElementById('stat-pending').innerText = stats.pending;
+
+    // Populate Filter Dropdown (0 Reads)
+    const filter = document.getElementById('teacher-filter');
+    filter.innerHTML = '<option value="ALL">Show All Teachers</option>';
+    const uniqueTeachers = [...new Set(pendingData.map(item => item.author))];
+    uniqueTeachers.forEach(t => filter.innerHTML += `<option value="${t}">${t}</option>`);
+
+    applyFilter();
   };
 
-  function renderList() {
+  window.applyFilter = () => {
+    const selectedTeacher = document.getElementById('teacher-filter').value;
+    const filteredData = selectedTeacher === "ALL" ? pendingData : pendingData.filter(i => i.author === selectedTeacher);
+    renderList(filteredData);
+  }
+
+  function renderList(dataToRender) {
     const list = document.getElementById('submission-list');
     list.innerHTML = '';
-    if (pendingData.length === 0) { list.innerHTML = `<div class="p-8 text-center text-emerald-500 font-bold">🎉 Zero pending submissions!</div>`; return; }
+    if (dataToRender.length === 0) { list.innerHTML = `<div class="p-8 text-center text-emerald-500 font-bold">🎉 Zero pending submissions for this selection!</div>`; return; }
 
-    pendingData.forEach(item => {
+    dataToRender.forEach(item => {
       list.innerHTML += `
         <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
           <div>
@@ -159,7 +184,6 @@
     window.cancelEdit();
     document.getElementById('modal-title').innerText = currentItem.title;
     document.getElementById('modal-author').innerText = currentItem.author;
-    
     if (currentItem.type === 'quiz') {
       document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(currentItem.content, null, 2)}</pre>`;
     } else {
@@ -177,7 +201,6 @@
     document.getElementById('modal-footer-view').classList.add('hidden');
     document.getElementById('modal-content-edit').classList.remove('hidden');
     document.getElementById('modal-footer-edit').classList.remove('hidden');
-
     if (!adminQuill) adminQuill = new Quill('#admin-quill', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1, 2] }],['bold', 'italic'],[{ 'list': 'ordered'}, { 'list': 'bullet' }],['image', 'formula'],['clean']] }});
     adminQuill.root.innerHTML = currentItem.content;
   };

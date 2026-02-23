@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Contributors – ERT Odisha</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
+<style>
+  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; }
+  .nav { display: flex; align-items: center; padding: 15px 5%; background: #ffffff; border-bottom: 1px solid #e8eef5; position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .teacher-card { transition: transform 0.2s, box-shadow 0.2s; }
+  .teacher-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(58,134,255,0.15); }
+</style>
+</head>
+<body class="text-slate-700">
+
+  <div class="nav justify-between">
+    <a href="index.html" class="font-baloo text-2xl font-bold text-sky flex items-center gap-2">
+      <img src="logo.png" alt="Logo" class="h-8 hidden sm:block" onerror="this.style.display='none'">
+      ERT <span class="text-sun">Odisha</span>
+    </a>
+    <span class="bg-blue-50 text-sky px-4 py-1.5 rounded-full font-bold text-sm">Wall of Fame 🏆</span>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-5 py-12 text-center">
+    
+    <h1 class="font-baloo text-4xl md:text-5xl font-bold text-dark mb-4">Meet Our <span class="text-sky">Contributors</span></h1>
+    <p class="text-lg text-slate-500 mb-12 max-w-2xl mx-auto">Dedicated teachers from across Odisha working together to provide free, high-quality digital learning materials for every student.</p>
+
+    <div id="loader" class="text-4xl animate-bounce mb-2">☁️ Fetching Teachers...</div>
+
+    <!-- Contributors Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 text-left" id="contributors-grid">
+      <!-- Injected by JS -->
+    </div>
+
+  </main>
+
+<script type="module">
+  import { getAllTeachers } from './firebase-engine.js';
+
+  async function loadContributors() {
+    try {
+      const teachers = await getAllTeachers();
+      document.getElementById('loader').classList.add('hidden');
+      const grid = document.getElementById('contributors-grid');
+      
+      if(teachers.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold">No contributors registered yet.</div>`;
+        return;
+      }
+
+      teachers.forEach(t => {
+        // Fallback Avatar if they didn't upload one
+        const avatar = t.pic || `https://api.dicebear.com/7.x/initials/svg?seed=${t.name}`;
+        const dist = t.dist || "Odisha";
+        const block = t.block || "Teacher";
+
+        grid.innerHTML += `
+          <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 teacher-card flex flex-col items-center text-center">
+            <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-inner">
+              <img src="${avatar}" class="w-full h-full object-cover">
+            </div>
+            <h3 class="font-baloo text-xl font-bold text-dark w-full truncate">${t.name}</h3>
+            <p class="text-sm font-bold text-sky uppercase tracking-wide mt-1">${block}</p>
+            <p class="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">📍 ${dist}</p>
+          </div>
+        `;
+      });
+    } catch (err) {
+      document.getElementById('loader').innerText = "Error loading contributors.";
+      console.error(err);
+    }
+  }
+
+  loadContributors();
+</script>
+
+</body>
+</html>
