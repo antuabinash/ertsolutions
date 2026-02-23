@@ -70,6 +70,10 @@
       <div id="tab-entry" class="block">
         
         <!-- DASHBOARD STATS -->
+        <div class="flex justify-between items-center mb-2 px-1">
+          <h3 class="font-bold text-slate-500 uppercase tracking-wide text-sm">My Contributions</h3>
+          <button onclick="refreshStats()" class="text-sky text-xs font-bold bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">🔄 Refresh Stats</button>
+        </div>
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
             <div class="text-3xl">🌟</div>
@@ -161,6 +165,23 @@
   let isLoginMode = true;
   let profileBase64 = "";
 
+  // --- STATS REFRESHER ---
+  window.refreshStats = async () => {
+    const liveEl = document.getElementById('stat-my-live');
+    const pendingEl = document.getElementById('stat-my-pending');
+    liveEl.innerText = "...";
+    pendingEl.innerText = "...";
+    try {
+      const stats = await getTeacherStats(teacherDisplayName);
+      liveEl.innerText = stats.live !== undefined ? stats.live : "0";
+      pendingEl.innerText = stats.pending !== undefined ? stats.pending : "0";
+    } catch (err) {
+      console.error("Stats fetch error:", err);
+      liveEl.innerText = "0";
+      pendingEl.innerText = "0";
+    }
+  };
+
   // --- PERSISTENT LOGIN LISTENER ---
   onAuthStateChanged(auth, async (user) => {
     document.getElementById('auth-loader').classList.add('hidden'); 
@@ -182,6 +203,11 @@
     document.getElementById('btn-tab-entry').classList.remove('active');
     document.getElementById('btn-tab-profile').classList.remove('active');
     document.getElementById('btn-' + tabId).classList.add('active');
+
+    // Auto-refresh stats when switching back to Entry tab
+    if (tabId === 'tab-entry') {
+      window.refreshStats();
+    }
   };
 
   window.toggleAuthMode = () => {
@@ -253,7 +279,6 @@
       
       // Setup UI text elements
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
-      document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
       document.getElementById('prof-name').value = teacherDisplayName;
       if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
       if(profile?.block) document.getElementById('prof-block').value = profile.block;
@@ -262,16 +287,7 @@
         document.getElementById('prof-pic-preview').src = profile.pic;
       }
 
-      // Robust attempt to load teacher stats
-      try {
-        const stats = await getTeacherStats(teacherDisplayName);
-        document.getElementById('stat-my-live').innerText = stats.live !== undefined ? stats.live : "0";
-        document.getElementById('stat-my-pending').innerText = stats.pending !== undefined ? stats.pending : "0";
-      } catch (statsErr) {
-        console.error("Failed to load stats:", statsErr);
-        document.getElementById('stat-my-live').innerText = "0";
-        document.getElementById('stat-my-pending').innerText = "0";
-      }
+      await window.refreshStats();
     } catch (e) {
       console.error("Dashboard Loading Error:", e);
     }
@@ -305,12 +321,9 @@
     try {
       await saveTeacherProfile(auth.currentUser.uid, data);
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
-      document.getElementById('dash-teacher-name').innerText = teacherDisplayName;
       
       // Re-fetch stats using the newly updated profile name
-      const stats = await getTeacherStats(teacherDisplayName);
-      document.getElementById('stat-my-live').innerText = stats.live !== undefined ? stats.live : "0";
-      document.getElementById('stat-my-pending').innerText = stats.pending !== undefined ? stats.pending : "0";
+      await window.refreshStats();
 
       btn.innerText = "Save Profile";
       showToast("✅ Profile Updated Successfully!");
