@@ -20,7 +20,12 @@
 </head>
 <body class="text-slate-700">
 
-  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-dark p-4">
+  <!-- INITIAL LOADER -->
+  <div id="auth-loader" class="min-h-screen flex items-center justify-center bg-dark">
+    <div class="text-white font-bold text-xl animate-pulse">Checking Security Clearance...</div>
+  </div>
+
+  <div id="login-screen" class="hidden min-h-screen flex items-center justify-center bg-dark p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
       <div class="text-5xl mb-4">🛡️</div>
       <h1 class="font-baloo text-3xl font-bold text-dark mb-2">Admin Portal</h1>
@@ -38,15 +43,13 @@
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-10 h-10 bg-dark text-white rounded-lg flex items-center justify-center text-xl">🛡️</div>
-          <span class="font-baloo text-xl font-bold text-dark">ERT <span class="text-sky">Odisha</span> Admin</span>
+          <span class="font-baloo text-xl font-bold text-dark hidden sm:block">ERT <span class="text-sky">Odisha</span> Admin</span>
         </div>
         <button onclick="logout()" class="text-sm font-bold text-slate-500 hover:text-rose">Logout</button>
       </div>
     </header>
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-      
-      <!-- SMART SYSTEM STATS -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
           <div><p class="text-sm text-slate-500 font-bold uppercase">Total Live Content</p><h3 class="font-baloo text-4xl font-bold text-emerald" id="stat-live">...</h3></div>
@@ -61,9 +64,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-50 gap-4">
           <h2 class="font-baloo text-xl font-bold text-dark">Submissions Awaiting Approval</h2>
-          
           <div class="flex gap-4 w-full md:w-auto">
-            <!-- IN-MEMORY FILTER DROPDOWN -->
             <select id="teacher-filter" class="px-4 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold text-slate-600 bg-white flex-1" onchange="applyFilter()">
               <option value="ALL">Show All Teachers</option>
             </select>
@@ -75,7 +76,6 @@
     </main>
   </div>
 
-  <!-- MODAL -->
   <div id="review-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
       <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
@@ -107,11 +107,27 @@
   <div id="toast" class="fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
 
 <script type="module">
-  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser, getAdminStats } from './firebase-engine.js';
+  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser, getAdminStats, auth } from './firebase-engine.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   let pendingData = [];
   let currentItem = null;
   let adminQuill = null;
+
+  // --- PERSISTENT LOGIN LISTENER ---
+  onAuthStateChanged(auth, (user) => {
+    document.getElementById('auth-loader').classList.add('hidden');
+    
+    // Check if logged in AND it is the admin email
+    if (user && user.email === 'admin@ertodisha.in') {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      window.fetchData();
+    } else {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+    }
+  });
 
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -122,9 +138,7 @@
     try {
       btn.innerText = "Authenticating...";
       await loginUser(email, password);
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
-      window.fetchData();
+      // onAuthStateChanged handles the screen switch
     } catch(error) {
       alert("Incorrect Admin Password.");
       btn.innerText = "Access Secure DB";
@@ -135,21 +149,17 @@
 
   window.fetchData = async () => {
     document.getElementById('submission-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching securely from cloud...</div>`;
-    
-    // Fetch Data & Stats simultaneously
     const [data, stats] = await Promise.all([getPendingContent(), getAdminStats()]);
     pendingData = data;
     
     document.getElementById('stat-live').innerText = stats.live;
     document.getElementById('stat-pending').innerText = stats.pending;
 
-    // Populate Filter Dropdown (0 Reads)
     const filter = document.getElementById('teacher-filter');
     filter.innerHTML = '<option value="ALL">Show All Teachers</option>';
     const uniqueTeachers = [...new Set(pendingData.map(item => item.author))];
     uniqueTeachers.forEach(t => filter.innerHTML += `<option value="${t}">${t}</option>`);
-
-    applyFilter();
+    window.applyFilter();
   };
 
   window.applyFilter = () => {

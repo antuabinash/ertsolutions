@@ -21,7 +21,12 @@
 </head>
 <body class="text-slate-700">
 
-  <div id="login-screen" class="min-h-screen flex items-center justify-center bg-sky p-4">
+  <!-- INITIAL LOADER (Prevents login screen flash) -->
+  <div id="auth-loader" class="min-h-screen flex items-center justify-center bg-sky">
+    <div class="text-white font-bold text-xl animate-pulse">Loading ERT Odisha...</div>
+  </div>
+
+  <div id="login-screen" class="hidden min-h-screen flex items-center justify-center bg-sky p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
       <div class="text-5xl mb-4">👨‍🏫</div>
       <h1 id="auth-title" class="font-baloo text-3xl font-bold text-dark mb-2">Teacher Login</h1>
@@ -62,7 +67,6 @@
       
       <!-- TAB 1: CONTENT ENTRY -->
       <div id="tab-entry" class="block">
-        <!-- Personal Stats -->
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3">
             <div class="text-3xl">🌟</div><div><p class="text-xs font-bold text-emerald-600 uppercase">Live Published</p><h4 class="font-baloo text-2xl font-bold text-emerald-800" id="stat-my-live">...</h4></div>
@@ -133,6 +137,8 @@
 
 <script type="module">
   import { submitContent, loginUser, registerUser, logoutUser, auth, getTeacherStats, saveTeacherProfile, getTeacherProfile } from './firebase-engine.js';
+  // NEW: Import authentication state listener
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   const commonSubjects = { odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa (EVS)', eng: 'English', sci: 'Science', soc: 'Social Science', hindi: 'Hindi', skt: 'Sanskrit' };
   const classSubjectsMap = {
@@ -141,9 +147,22 @@
   };
 
   let quillEditor = null;
-  let teacherDisplayName = "";
+  let teacherDisplayName = localStorage.getItem('ert_teacher_name') || "";
   let isLoginMode = true;
   let profileBase64 = "";
+
+  // --- PERSISTENT LOGIN LISTENER ---
+  // This automatically skips the login screen if the teacher signed in previously
+  onAuthStateChanged(auth, async (user) => {
+    document.getElementById('auth-loader').classList.add('hidden'); // Hide loader
+    
+    if (user) {
+      await loadDashboard(user);
+    } else {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
+    }
+  });
 
   // --- UI TOGGLES ---
   window.switchTab = (tabId) => {
@@ -164,7 +183,6 @@
     document.getElementById('toggle-text').innerText = isLoginMode ? "New teacher?" : "Already have an account?";
     document.getElementById('toggle-btn').innerText = isLoginMode ? "Sign Up Here" : "Log In Here";
     
-    // Show Name field only on signup
     if(isLoginMode) {
       document.getElementById('auth-name').classList.add('hidden');
       document.getElementById('auth-name').required = false;
@@ -174,7 +192,6 @@
     }
   };
 
-  // --- COMPRESSION (Used for Profile Pic and TLM) ---
   function compressImageToBase64(file, maxWidth = 600, quality = 0.6) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -205,15 +222,13 @@
     btn.innerText = "Authenticating...";
 
     try {
-      let user;
       if(isLoginMode) {
-        user = (await loginUser(email, password)).user;
+        await loginUser(email, password);
       } else {
-        user = (await registerUser(email, password)).user;
-        // Save initial profile
-        await saveTeacherProfile(user.uid, { name: name, email: email, dateJoined: new Date().getTime() });
+        const userCred = await registerUser(email, password);
+        await saveTeacherProfile(userCred.user.uid, { name: name, email: email, dateJoined: new Date().getTime() });
       }
-      loadDashboard(user);
+      // Note: We don't manually call loadDashboard here because onAuthStateChanged handles the screen switch automatically!
     } catch(error) {
       alert("Authentication Error: " + error.message);
       btn.innerText = originalText;
@@ -224,11 +239,9 @@
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     
-    // 1. Fetch Profile
     const profile = await getTeacherProfile(user.uid);
     teacherDisplayName = profile?.name || "Teacher";
     
-    // Update Profile UI
     document.getElementById('prof-display-name').innerText = teacherDisplayName;
     document.getElementById('prof-name').value = teacherDisplayName;
     if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
@@ -238,7 +251,6 @@
       document.getElementById('prof-pic-preview').src = profile.pic;
     }
 
-    // 2. Fetch Stats
     const stats = await getTeacherStats(teacherDisplayName);
     document.getElementById('stat-my-live').innerText = stats.live;
     document.getElementById('stat-my-pending').innerText = stats.pending;
@@ -250,7 +262,6 @@
   window.previewProfilePic = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
-    // Compress profile pic extra small (200px)
     profileBase64 = await compressImageToBase64(file, 200, 0.7);
     document.getElementById('prof-pic-preview').src = profileBase64;
   };
@@ -271,7 +282,6 @@
     await saveTeacherProfile(auth.currentUser.uid, data);
     document.getElementById('prof-display-name').innerText = teacherDisplayName;
     
-    // Refresh Stats in case name changed
     const stats = await getTeacherStats(teacherDisplayName);
     document.getElementById('stat-my-live').innerText = stats.live;
     document.getElementById('stat-my-pending').innerText = stats.pending;
@@ -332,7 +342,10 @@
   };
 
   window.saveContent = async () => {
-    if(!teacherDisplayName) return alert("Please set your Name in the Profile tab first!");
+    if(!teacherDisplayName) {
+      switchTab('tab-profile');
+      return alert("Please set your Profile details first!");
+    }
     
     const btn = document.getElementById('save-btn');
     btn.innerText = "⏳ Uploading..."; btn.disabled = true;
@@ -369,6 +382,7 @@
       await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, payload);
       
       showToast("✅ Submitted to Admin for Review!");
+      // On success, the page reloads. The auth listener will automatically bypass login!
       setTimeout(() => location.reload(), 2000);
     } catch (err) {
       alert("Error saving: " + err.message);
