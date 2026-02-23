@@ -24,11 +24,11 @@
     <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
       <div class="text-5xl mb-4">🛡️</div>
       <h1 class="font-baloo text-3xl font-bold text-dark mb-2">Admin Portal</h1>
-      <p class="text-slate-500 mb-6 text-sm">Secure Real-Time Login</p>
+      <p class="text-slate-500 mb-6 text-sm">Logging in as <strong class="text-dark">admin@ertodisha.in</strong></p>
+      
       <form id="login-form" class="space-y-4">
-        <!-- Locked to the specific Admin Email -->
-        <input type="email" id="admin-email" placeholder="Admin Email" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none" value="admin@ertodisha.in" readonly>
-        <input type="password" id="admin-password" placeholder="Admin Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
+        <!-- We only ask for the password to keep it fast and secure -->
+        <input type="password" id="admin-password" placeholder="Admin Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none text-center">
         <button type="submit" id="login-btn" class="w-full bg-sky text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition shadow-lg">Access Secure DB</button>
       </form>
     </div>
@@ -49,7 +49,7 @@
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <h2 class="font-baloo text-xl font-bold text-dark">Submissions Awaiting Approval</h2>
-          <button onclick="fetchData()" class="text-sky font-bold text-sm">🔄 Refresh List</button>
+          <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">🔄 Refresh</button>
         </div>
         <div class="divide-y border-slate-100" id="submission-list"></div>
       </div>
@@ -64,8 +64,14 @@
         <button onclick="closeModal()" class="text-2xl text-slate-400">&times;</button>
       </div>
       <div class="p-6 overflow-y-auto flex-1">
-        <h2 class="text-2xl font-bold text-dark mb-2" id="modal-title">Title</h2>
-        <p class="text-sm text-slate-500 mb-6 border-b pb-4">By: <strong id="modal-author">Author</strong> | ID: <span id="modal-id"></span></p>
+        
+        <!-- TEACHER RECOGNITION BADGE -->
+        <div class="inline-flex items-center gap-2 bg-blue-50 text-sky px-3 py-1.5 rounded-lg text-sm font-bold mb-4 border border-blue-100">
+          👨‍🏫 Authored by: <span id="modal-author">Teacher Name</span>
+        </div>
+
+        <h2 class="text-2xl font-bold text-dark mb-4" id="modal-title">Title</h2>
+        
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
           <div id="modal-content-view" class="prose max-w-none"></div>
           <div id="modal-content-edit" class="hidden"><div id="admin-quill" class="bg-white"></div></div>
@@ -76,7 +82,7 @@
       <div id="modal-footer-view" class="px-6 py-4 border-t flex justify-end gap-4 bg-slate-50 rounded-b-2xl">
         <button onclick="rejectAction()" class="px-6 py-2 rounded-xl font-bold text-rose border border-rose-200">Reject & Delete</button>
         <button onclick="enableEditMode()" class="px-6 py-2 rounded-xl font-bold text-sky border border-blue-200">✏️ Edit HTML</button>
-        <button id="approve-btn" onclick="approveAction()" class="px-6 py-2 rounded-xl font-bold text-white bg-emerald shadow-lg">Approve & Push Live</button>
+        <button id="approve-btn" onclick="approveAction()" class="px-6 py-2 rounded-xl font-bold text-white bg-emerald shadow-lg hover:bg-emerald-600 transition">Approve & Push Live</button>
       </div>
       
       <!-- Edit Footer -->
@@ -99,13 +105,9 @@
   // --- REAL FIREBASE LOGIN ---
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('admin-email').value;
+    const email = 'admin@ertodisha.in'; // Hardcoded for security
     const password = document.getElementById('admin-password').value;
     const btn = document.getElementById('login-btn');
-
-    if(email !== 'admin@ertodisha.in') {
-      return alert("Unauthorized Email Address.");
-    }
 
     try {
       btn.innerText = "Authenticating...";
@@ -115,7 +117,7 @@
       document.getElementById('dashboard').classList.remove('hidden');
       window.fetchData();
     } catch(error) {
-      alert("Invalid Password or Account not created in Firebase yet.");
+      alert("Incorrect Admin Password.");
       btn.innerText = "Access Secure DB";
     }
   });
@@ -140,11 +142,14 @@
       list.innerHTML += `
         <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
           <div>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-sky uppercase tracking-wide">${item.typeName}</span>
-            <h3 class="font-bold text-lg text-dark mt-2">${item.title}</h3>
-            <p class="text-sm text-slate-500">Class ${item.class} • ${item.subject} • Submitted by ${item.author}</p>
+            <div class="flex gap-2 items-center mb-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-sky uppercase tracking-wide">${item.typeName}</span>
+              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject}</span>
+            </div>
+            <h3 class="font-bold text-lg text-dark">${item.title}</h3>
+            <p class="text-sm font-bold text-slate-500 mt-1">👨‍🏫 By ${item.author}</p>
           </div>
-          <button onclick="openModal('${item.id}')" class="px-6 py-2 bg-sky text-white font-bold rounded-xl shadow-md">Review</button>
+          <button onclick="openModal('${item.id}')" class="px-6 py-2 bg-sky text-white font-bold rounded-xl shadow-md hover:bg-blue-600 transition">Review</button>
         </div>`;
     });
   }
@@ -154,7 +159,6 @@
     window.cancelEdit();
     document.getElementById('modal-title').innerText = currentItem.title;
     document.getElementById('modal-author').innerText = currentItem.author;
-    document.getElementById('modal-id').innerText = currentItem.id;
     
     if (currentItem.type === 'quiz') {
       document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(currentItem.content, null, 2)}</pre>`;

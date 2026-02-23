@@ -7,9 +7,8 @@ import {
 import { 
   getStorage, ref, uploadBytes, getDownloadURL 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-// NEW: Firebase Authentication Imports
 import { 
-  getAuth, signInWithEmailAndPassword, signOut 
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -27,13 +26,18 @@ const db = initializeFirestore(app, {
   localCache: persistentLocalCache() 
 });
 const storage = getStorage(app);
-const auth = getAuth(app); // NEW: Initialize Auth
+const auth = getAuth(app); 
 
 // ==========================================
 // 🔐 AUTHENTICATION FUNCTIONS
 // ==========================================
 export async function loginUser(email, password) {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  return userCredential.user;
+}
+
+export async function registerUser(email, password) {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   return userCredential.user;
 }
 
@@ -46,12 +50,6 @@ export async function logoutUser() {
 // ==========================================
 export function generateDocId(classId, subject, chapter, type) {
   return `class${classId}_${subject}_ch${chapter}_${type}`;
-}
-
-export async function uploadImage(file) {
-  const fileRef = ref(storage, 'uploads/' + Date.now() + '_' + file.name);
-  await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
 }
 
 export async function submitContent(classId, subject, chapter, type, typeName, title, author, contentPayload) {
