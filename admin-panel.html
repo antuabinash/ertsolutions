@@ -16,6 +16,7 @@
   .ql-container { font-family: 'Nunito', sans-serif; font-size: 1rem; background: white; border-radius: 0 0 8px 8px; min-height: 200px;}
   .ql-toolbar { background: #f8fafc; border-radius: 8px 8px 0 0; }
   ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  .tab-btn.active { background: #1A1A2E; color: white; border-color: #1A1A2E;}
 </style>
 </head>
 <body class="text-slate-700">
@@ -43,63 +44,105 @@
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-10 h-10 bg-dark text-white rounded-lg flex items-center justify-center text-xl">🛡️</div>
-          <span class="font-baloo text-xl font-bold text-dark hidden sm:block">ERT <span class="text-sky">Odisha</span> Admin</span>
+          <span class="font-baloo text-xl font-bold text-dark hidden md:block">ERT <span class="text-sky">Odisha</span> Admin</span>
         </div>
+        
+        <div class="flex gap-2 bg-slate-100 p-1 rounded-xl">
+          <button onclick="switchTab('tab-pending')" id="btn-tab-pending" class="tab-btn active px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500 transition">Pending <span id="badge-pending" class="bg-orange-500 text-white px-1.5 py-0.5 rounded text-xs ml-1">0</span></button>
+          <button onclick="switchTab('tab-live')" id="btn-tab-live" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-bold text-slate-500 transition">Live Content</button>
+        </div>
+
         <button onclick="logout()" class="text-sm font-bold text-slate-500 hover:text-rose">Logout</button>
       </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8 relative">
+      
+      <!-- STATS DASHBOARD -->
+      <div class="grid grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
-          <div><p class="text-sm text-slate-500 font-bold uppercase">Total Live Content</p><h3 class="font-baloo text-4xl font-bold text-emerald" id="stat-live">...</h3></div>
-          <div class="text-5xl opacity-20">✅</div>
+          <div><p class="text-sm text-slate-500 font-bold uppercase">Total Live Content</p><h3 class="font-baloo text-3xl md:text-4xl font-bold text-emerald" id="stat-live">...</h3></div>
+          <div class="text-5xl opacity-20 hidden sm:block">✅</div>
         </div>
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex items-center justify-between">
-          <div><p class="text-sm text-slate-500 font-bold uppercase">Pending Approvals</p><h3 class="font-baloo text-4xl font-bold text-orange-500" id="stat-pending">...</h3></div>
-          <div class="text-5xl opacity-20">⏳</div>
+          <div><p class="text-sm text-slate-500 font-bold uppercase">Pending Approvals</p><h3 class="font-baloo text-3xl md:text-4xl font-bold text-orange-500" id="stat-pending">...</h3></div>
+          <div class="text-5xl opacity-20 hidden sm:block">⏳</div>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-50 gap-4">
-          <h2 class="font-baloo text-xl font-bold text-dark">Submissions Awaiting Approval</h2>
-          <div class="flex gap-4 w-full md:w-auto">
-            <select id="teacher-filter" class="px-4 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold text-slate-600 bg-white flex-1" onchange="applyFilter()">
-              <option value="ALL">Show All Teachers</option>
-            </select>
-            <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 whitespace-nowrap">🔄 Refresh</button>
+      <!-- TAB 1: PENDING APPROVALS -->
+      <div id="tab-pending" class="block">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h2 class="font-baloo text-xl font-bold text-dark">Awaiting Approval</h2>
+            <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">🔄 Refresh</button>
           </div>
+          <div class="divide-y border-slate-100" id="pending-list"></div>
         </div>
-        <div class="divide-y border-slate-100" id="submission-list"></div>
       </div>
+
+      <!-- TAB 2: LIVE CONTENT MANAGER -->
+      <div id="tab-live" class="hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 bg-slate-50">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="font-baloo text-xl font-bold text-dark">Live Database Manager</h2>
+              <button onclick="fetchData()" class="text-sky font-bold text-sm bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100">🔄 Refresh DB</button>
+            </div>
+            
+            <!-- MULTI-FILTER TOOLBAR -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <input type="text" id="filter-search" placeholder="Search title..." class="col-span-2 md:col-span-1 px-3 py-2 rounded-lg border outline-none text-sm font-bold" onkeyup="applyLiveFilter()">
+              <select id="filter-teacher" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Teachers</option></select>
+              <select id="filter-class" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Classes</option>
+                <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option>
+              </select>
+              <select id="filter-subject" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Subjects</option>
+                <option value="odia">Odia</option><option value="math">Maths</option><option value="eng">English</option><option value="sci">Science</option><option value="soc">Social</option><option value="paribesa">EVS</option>
+              </select>
+              <select id="filter-chapter" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Chapters</option>
+                <option value="01">Ch 1</option><option value="02">Ch 2</option><option value="03">Ch 3</option><option value="04">Ch 4</option><option value="05">Ch 5</option><option value="06">Ch 6</option><option value="07">Ch 7</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="divide-y border-slate-100" id="live-list"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 
+  <!-- UNIFIED REVIEW MODAL -->
   <div id="review-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
       <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
-        <h3 class="font-baloo text-xl font-bold text-dark" id="modal-header-title">Review Content</h3>
+        <div class="flex items-center gap-3">
+          <h3 class="font-baloo text-xl font-bold text-dark" id="modal-header-title">Review Content</h3>
+          <span id="modal-badge-status" class="px-2 py-0.5 rounded text-xs font-bold text-white uppercase"></span>
+        </div>
         <button onclick="closeModal()" class="text-2xl text-slate-400">&times;</button>
       </div>
+      
       <div class="p-6 overflow-y-auto flex-1">
-        <div class="inline-flex items-center gap-2 bg-blue-50 text-sky px-3 py-1.5 rounded-lg text-sm font-bold mb-4 border border-blue-100">
-          👨‍🏫 Authored by: <span id="modal-author">Teacher Name</span>
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 bg-blue-50 text-sky px-3 py-1.5 rounded-lg text-sm font-bold mb-2 border border-blue-100">👨‍🏫 By: <span id="modal-author">Teacher</span></div>
+            <h2 class="text-2xl font-bold text-dark" id="modal-title">Title</h2>
+          </div>
+          <!-- MAGIC BUTTON: View exactly as student -->
+          <button id="btn-view-student" onclick="openStudentView()" class="hidden bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-slate-700">🎓 View as Student</button>
         </div>
-        <h2 class="text-2xl font-bold text-dark mb-4" id="modal-title">Title</h2>
+        
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
           <div id="modal-content-view" class="prose max-w-none"></div>
           <div id="modal-content-edit" class="hidden"><div id="admin-quill" class="bg-white"></div></div>
         </div>
       </div>
-      <div id="modal-footer-view" class="px-6 py-4 border-t flex justify-end gap-4 bg-slate-50 rounded-b-2xl">
-        <button onclick="rejectAction()" class="px-6 py-2 rounded-xl font-bold text-rose border border-rose-200">Reject & Delete</button>
-        <button onclick="enableEditMode()" class="px-6 py-2 rounded-xl font-bold text-sky border border-blue-200">✏️ Edit HTML</button>
-        <button id="approve-btn" onclick="approveAction()" class="px-6 py-2 rounded-xl font-bold text-white bg-emerald shadow-lg hover:bg-emerald-600 transition">Approve & Push Live</button>
-      </div>
-      <div id="modal-footer-edit" class="hidden px-6 py-4 border-t flex justify-end gap-4 bg-slate-50 rounded-b-2xl">
-        <button onclick="cancelEdit()" class="px-6 py-2 rounded-xl font-bold text-slate-500 border border-slate-300">Cancel Edit</button>
-        <button onclick="saveEdit()" class="px-6 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Edit</button>
+      
+      <!-- Footer: Dynamic based on mode -->
+      <div id="modal-footer" class="px-6 py-4 border-t flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+        <!-- Buttons injected by JS based on Pending vs Live -->
       </div>
     </div>
   </div>
@@ -107,18 +150,18 @@
   <div id="toast" class="fixed bottom-5 right-5 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all duration-300 z-50"></div>
 
 <script type="module">
-  import { getPendingContent, approveContent, rejectContent, loginUser, logoutUser, getAdminStats, auth } from './firebase-engine.js';
+  import { getPendingContent, getLiveContentAll, approveContent, rejectContent, deleteLiveContent, updateLiveContent, loginUser, logoutUser, getAdminStats, auth } from './firebase-engine.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
   let pendingData = [];
+  let liveData = [];
   let currentItem = null;
+  let currentMode = 'pending'; // 'pending' or 'live'
   let adminQuill = null;
 
   // --- PERSISTENT LOGIN LISTENER ---
   onAuthStateChanged(auth, (user) => {
     document.getElementById('auth-loader').classList.add('hidden');
-    
-    // Check if logged in AND it is the admin email
     if (user && user.email === 'admin@ertodisha.in') {
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
@@ -131,106 +174,205 @@
 
   document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = 'admin@ertodisha.in'; 
-    const password = document.getElementById('admin-password').value;
     const btn = document.getElementById('login-btn');
-
     try {
       btn.innerText = "Authenticating...";
-      await loginUser(email, password);
-      // onAuthStateChanged handles the screen switch
-    } catch(error) {
-      alert("Incorrect Admin Password.");
-      btn.innerText = "Access Secure DB";
-    }
+      await loginUser('admin@ertodisha.in', document.getElementById('admin-password').value);
+    } catch(error) { alert("Incorrect Admin Password."); btn.innerText = "Access Secure DB"; }
   });
 
   window.logout = async () => { await logoutUser(); location.reload(); };
 
+  // --- UI TOGGLES ---
+  window.switchTab = (tabId) => {
+    document.getElementById('tab-pending').classList.add('hidden');
+    document.getElementById('tab-live').classList.add('hidden');
+    document.getElementById(tabId).classList.remove('hidden');
+    document.getElementById('btn-tab-pending').classList.remove('active');
+    document.getElementById('btn-tab-live').classList.remove('active');
+    document.getElementById('btn-' + tabId).classList.add('active');
+  };
+
+  // --- DATA FETCHING ---
   window.fetchData = async () => {
-    document.getElementById('submission-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching securely from cloud...</div>`;
-    const [data, stats] = await Promise.all([getPendingContent(), getAdminStats()]);
-    pendingData = data;
+    document.getElementById('pending-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching Pending...</div>`;
+    document.getElementById('live-list').innerHTML = `<div class="p-8 text-center text-slate-500">⏳ Fetching Live DB...</div>`;
+    
+    const [pData, lData, stats] = await Promise.all([getPendingContent(), getLiveContentAll(), getAdminStats()]);
+    pendingData = pData;
+    liveData = lData;
     
     document.getElementById('stat-live').innerText = stats.live;
     document.getElementById('stat-pending').innerText = stats.pending;
+    document.getElementById('badge-pending').innerText = stats.pending;
 
-    const filter = document.getElementById('teacher-filter');
-    filter.innerHTML = '<option value="ALL">Show All Teachers</option>';
-    const uniqueTeachers = [...new Set(pendingData.map(item => item.author))];
+    // Setup Teacher Filter for Live Manager
+    const filter = document.getElementById('filter-teacher');
+    filter.innerHTML = '<option value="ALL">All Teachers</option>';
+    const uniqueTeachers = [...new Set(liveData.map(item => item.author))];
     uniqueTeachers.forEach(t => filter.innerHTML += `<option value="${t}">${t}</option>`);
-    window.applyFilter();
+
+    renderPending();
+    window.applyLiveFilter();
   };
 
-  window.applyFilter = () => {
-    const selectedTeacher = document.getElementById('teacher-filter').value;
-    const filteredData = selectedTeacher === "ALL" ? pendingData : pendingData.filter(i => i.author === selectedTeacher);
-    renderList(filteredData);
-  }
-
-  function renderList(dataToRender) {
-    const list = document.getElementById('submission-list');
+  function renderPending() {
+    const list = document.getElementById('pending-list');
     list.innerHTML = '';
-    if (dataToRender.length === 0) { list.innerHTML = `<div class="p-8 text-center text-emerald-500 font-bold">🎉 Zero pending submissions for this selection!</div>`; return; }
+    if (pendingData.length === 0) { list.innerHTML = `<div class="p-8 text-center text-emerald-500 font-bold">🎉 Inbox Zero! No pending submissions.</div>`; return; }
 
-    dataToRender.forEach(item => {
+    pendingData.forEach(item => {
       list.innerHTML += `
         <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
           <div>
-            <div class="flex gap-2 items-center mb-2">
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-sky uppercase tracking-wide">${item.typeName}</span>
-              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject}</span>
+            <div class="flex gap-2 items-center mb-1">
+              <span class="px-2 py-0.5 rounded text-xs font-bold bg-orange-100 text-orange-600 uppercase">Reviewing</span>
+              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • ${item.typeName}</span>
             </div>
             <h3 class="font-bold text-lg text-dark">${item.title}</h3>
-            <p class="text-sm font-bold text-slate-500 mt-1">👨‍🏫 By ${item.author}</p>
+            <p class="text-sm font-bold text-slate-500">👨‍🏫 By ${item.author}</p>
           </div>
-          <button onclick="openModal('${item.id}')" class="px-6 py-2 bg-sky text-white font-bold rounded-xl shadow-md hover:bg-blue-600 transition">Review</button>
+          <button onclick="openModal('${item.id}', 'pending')" class="px-6 py-2 bg-sky text-white font-bold rounded-xl shadow-md hover:bg-blue-600 transition">Review</button>
         </div>`;
     });
   }
 
-  window.openModal = (id) => {
-    currentItem = pendingData.find(i => i.id === id);
-    window.cancelEdit();
+  // --- LIVE MULTI-FILTER LOGIC (0 Reads) ---
+  window.applyLiveFilter = () => {
+    const sSearch = document.getElementById('filter-search').value.toLowerCase();
+    const sTeacher = document.getElementById('filter-teacher').value;
+    const sClass = document.getElementById('filter-class').value;
+    const sSub = document.getElementById('filter-subject').value;
+    const sChap = document.getElementById('filter-chapter').value;
+
+    const filteredData = liveData.filter(i => {
+      const matchSearch = i.title.toLowerCase().includes(sSearch) || i.author.toLowerCase().includes(sSearch);
+      const matchTeacher = sTeacher === "ALL" || i.author === sTeacher;
+      const matchClass = sClass === "ALL" || i.class == sClass; // loose equality for string/num
+      const matchSub = sSub === "ALL" || i.subject === sSub;
+      const matchChap = sChap === "ALL" || i.chapter === sChap;
+      return matchSearch && matchTeacher && matchClass && matchSub && matchChap;
+    });
+    
+    renderLive(filteredData);
+  }
+
+  function renderLive(data) {
+    const list = document.getElementById('live-list');
+    list.innerHTML = '';
+    if (data.length === 0) { list.innerHTML = `<div class="p-8 text-center text-slate-400 font-bold">No live items match this filter.</div>`; return; }
+
+    data.forEach(item => {
+      list.innerHTML += `
+        <div class="p-6 hover:bg-slate-50 flex justify-between items-center gap-4">
+          <div>
+            <div class="flex gap-2 items-center mb-1">
+              <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-700 uppercase">Live</span>
+              <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Class ${item.class} • ${item.subject} • Ch ${item.chapter}</span>
+            </div>
+            <h3 class="font-bold text-lg text-dark">${item.title} <span class="text-sm font-normal text-slate-400">(${item.typeName})</span></h3>
+            <p class="text-sm font-bold text-slate-500">👨‍🏫 ${item.author}</p>
+          </div>
+          <button onclick="openModal('${item.id}', 'live')" class="px-5 py-2 border border-slate-300 text-slate-600 font-bold rounded-xl shadow-sm hover:bg-slate-100 transition">Manage</button>
+        </div>`;
+    });
+  }
+
+  // --- UNIFIED MODAL LOGIC ---
+  window.openModal = (id, mode) => {
+    currentMode = mode;
+    currentItem = mode === 'pending' ? pendingData.find(i => i.id === id) : liveData.find(i => i.id === id);
+    
     document.getElementById('modal-title').innerText = currentItem.title;
     document.getElementById('modal-author').innerText = currentItem.author;
+    
+    // Status Badge
+    const badge = document.getElementById('modal-badge-status');
+    if(mode === 'pending') { badge.className = "px-2 py-0.5 rounded text-xs font-bold text-white uppercase bg-orange-500"; badge.innerText = "Pending Approval"; }
+    else { badge.className = "px-2 py-0.5 rounded text-xs font-bold text-white uppercase bg-emerald-500"; badge.innerText = "Live Published"; }
+
+    // Student View Magic Button
+    const btnStudent = document.getElementById('btn-view-student');
+    if(mode === 'live') { btnStudent.classList.remove('hidden'); } else { btnStudent.classList.add('hidden'); }
+
+    // Content
     if (currentItem.type === 'quiz') {
       document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(currentItem.content, null, 2)}</pre>`;
     } else {
       document.getElementById('modal-content-view').innerHTML = currentItem.content;
     }
+    
+    buildModalFooter();
+    document.getElementById('modal-content-view').classList.remove('hidden');
+    document.getElementById('modal-content-edit').classList.add('hidden');
     document.getElementById('review-modal').classList.remove('hidden');
   };
 
-  window.closeModal = () => document.getElementById('review-modal').classList.add('hidden');
+  function buildModalFooter() {
+    const footer = document.getElementById('modal-footer');
+    if (currentMode === 'pending') {
+      footer.innerHTML = `
+        <button onclick="rejectAction()" class="px-5 py-2 rounded-xl font-bold text-rose border border-rose-200">Reject & Delete</button>
+        <button onclick="enableEditMode()" class="px-5 py-2 rounded-xl font-bold text-sky border border-blue-200">✏️ Edit HTML</button>
+        <button onclick="approveAction()" class="px-5 py-2 rounded-xl font-bold text-white bg-emerald shadow-lg hover:bg-emerald-600 transition">Approve & Push Live</button>
+      `;
+    } else {
+      footer.innerHTML = `
+        <button onclick="deleteLive()" class="px-5 py-2 rounded-xl font-bold text-rose border border-rose-200">🗑️ Unpublish (Delete)</button>
+        <button onclick="enableEditMode()" class="px-5 py-2 rounded-xl font-bold text-sky border border-blue-200">✏️ Edit HTML</button>
+        <button onclick="closeModal()" class="px-5 py-2 rounded-xl font-bold text-slate-500 bg-slate-100 shadow-sm">Close</button>
+      `;
+    }
+  }
 
+  window.closeModal = () => document.getElementById('review-modal').classList.add('hidden');
+  
+  window.openStudentView = () => {
+    window.open(`viewer.html#class=${currentItem.class}&subject=${currentItem.subject}&chapter=${currentItem.chapter}&type=${currentItem.type}`, '_blank');
+  };
+
+  // --- EDITING LOGIC ---
   window.enableEditMode = () => {
-    if(currentItem.type === 'quiz') return alert("Direct JSON editing for quizzes is disabled. Reject and ask teacher to fix.");
-    document.getElementById('modal-header-title').innerText = "Editing HTML...";
+    if(currentItem.type === 'quiz') return alert("Direct JSON editing for quizzes is disabled. Delete and ask teacher to re-submit.");
     document.getElementById('modal-content-view').classList.add('hidden');
-    document.getElementById('modal-footer-view').classList.add('hidden');
     document.getElementById('modal-content-edit').classList.remove('hidden');
-    document.getElementById('modal-footer-edit').classList.remove('hidden');
+    
+    const footer = document.getElementById('modal-footer');
+    footer.innerHTML = `
+      <button onclick="cancelEdit()" class="px-5 py-2 rounded-xl font-bold text-slate-500 border border-slate-300">Cancel Edit</button>
+      <button onclick="saveEdit()" class="px-5 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Edit to DB</button>
+    `;
+
     if (!adminQuill) adminQuill = new Quill('#admin-quill', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1, 2] }],['bold', 'italic'],[{ 'list': 'ordered'}, { 'list': 'bullet' }],['image', 'formula'],['clean']] }});
     adminQuill.root.innerHTML = currentItem.content;
   };
 
   window.cancelEdit = () => {
-    document.getElementById('modal-header-title').innerText = "Review Content";
     document.getElementById('modal-content-view').classList.remove('hidden');
-    document.getElementById('modal-footer-view').classList.remove('hidden');
     document.getElementById('modal-content-edit').classList.add('hidden');
-    document.getElementById('modal-footer-edit').classList.add('hidden');
+    buildModalFooter();
   };
 
-  window.saveEdit = () => {
-    currentItem.content = adminQuill.root.innerHTML;
-    document.getElementById('modal-content-view').innerHTML = currentItem.content;
+  window.saveEdit = async () => {
+    const newContent = adminQuill.root.innerHTML;
+    currentItem.content = newContent;
+    document.getElementById('modal-content-view').innerHTML = newContent;
+    
+    // If it's a live document, we push the edit instantly to Firebase
+    if(currentMode === 'live') {
+      try {
+        await updateLiveContent(currentItem.id, newContent);
+        showToast("✅ Live Content Updated!", "bg-sky");
+      } catch(e) { alert("Error saving live edit."); }
+    } else {
+      showToast("Edit applied locally. Click Approve to push live.", "bg-slate-800");
+    }
     window.cancelEdit();
   };
 
+  // --- DATABASE ACTIONS ---
   window.approveAction = async () => {
-    document.getElementById('approve-btn').innerText = "Pushing Live...";
+    document.getElementById('modal-footer').innerHTML = `<span class="font-bold text-sky">Pushing Live...</span>`;
     await approveContent(currentItem);
     window.closeModal();
     window.fetchData();
@@ -238,11 +380,20 @@
   };
 
   window.rejectAction = async () => {
-    if(confirm("Permanently delete this submission?")) {
+    if(confirm("Permanently delete this pending submission?")) {
       await rejectContent(currentItem.id);
       window.closeModal();
       window.fetchData();
-      showToast("❌ Content Rejected and Deleted", "bg-rose-500");
+      showToast("❌ Pending Content Rejected", "bg-rose-500");
+    }
+  };
+
+  window.deleteLive = async () => {
+    if(confirm("DANGER: This will permanently remove this content from the Student App. Continue?")) {
+      await deleteLiveContent(currentItem.id);
+      window.closeModal();
+      window.fetchData();
+      showToast("🗑️ Live Content Deleted", "bg-rose-500");
     }
   };
 

@@ -28,27 +28,14 @@ export const auth = getAuth(app);
 // ==========================================
 // 🔐 AUTHENTICATION & PROFILES
 // ==========================================
-export async function loginUser(email, password) {
-  return await signInWithEmailAndPassword(auth, email, password);
-}
-
-export async function registerUser(email, password) {
-  return await createUserWithEmailAndPassword(auth, email, password);
-}
-
-export async function logoutUser() {
-  await signOut(auth);
-}
-
-export async function saveTeacherProfile(uid, profileData) {
-  await setDoc(doc(db, "Teachers", uid), profileData, { merge: true });
-}
-
+export async function loginUser(email, password) { return await signInWithEmailAndPassword(auth, email, password); }
+export async function registerUser(email, password) { return await createUserWithEmailAndPassword(auth, email, password); }
+export async function logoutUser() { await signOut(auth); }
+export async function saveTeacherProfile(uid, profileData) { await setDoc(doc(db, "Teachers", uid), profileData, { merge: true }); }
 export async function getTeacherProfile(uid) {
   const snap = await getDoc(doc(db, "Teachers", uid));
   return snap.exists() ? snap.data() : null;
 }
-
 export async function getAllTeachers() {
   const snap = await getDocs(collection(db, "Teachers"));
   let teachers = [];
@@ -69,7 +56,6 @@ export async function getTeacherStats(authorName) {
   if (!authorName) return { pending: 0, live: 0 };
   const pendingQ = query(collection(db, "Pending_Content"), where("author", "==", authorName));
   const liveQ = query(collection(db, "Live_Content"), where("author", "==", authorName));
-  
   const pSnap = await getCountFromServer(pendingQ);
   const lSnap = await getCountFromServer(liveQ);
   return { pending: pSnap.data().count, live: lSnap.data().count };
@@ -90,23 +76,33 @@ export async function submitContent(classId, subject, chapter, type, typeName, t
   });
 }
 
+// PENDING ACTIONS
 export async function getPendingContent() {
   const querySnapshot = await getDocs(collection(db, "Pending_Content"));
   let pendingItems = [];
   querySnapshot.forEach((doc) => pendingItems.push(doc.data()));
   return pendingItems;
 }
-
 export async function approveContent(pendingItem) {
   await setDoc(doc(db, "Live_Content", pendingItem.id), pendingItem); 
   await deleteDoc(doc(db, "Pending_Content", pendingItem.id)); 
 }
+export async function rejectContent(docId) { await deleteDoc(doc(db, "Pending_Content", docId)); }
 
-export async function rejectContent(docId) {
-  await deleteDoc(doc(db, "Pending_Content", docId));
+// LIVE MANAGER ACTIONS (NEW)
+export async function getLiveContentAll() {
+  const querySnapshot = await getDocs(collection(db, "Live_Content"));
+  let liveItems = [];
+  querySnapshot.forEach((doc) => liveItems.push(doc.data()));
+  return liveItems;
 }
-
 export async function fetchLiveContent(classId, subject, chapter, type) {
   const docSnap = await getDoc(doc(db, "Live_Content", generateDocId(classId, subject, chapter, type)));
   return docSnap.exists() ? docSnap.data() : null; 
+}
+export async function deleteLiveContent(docId) {
+  await deleteDoc(doc(db, "Live_Content", docId));
+}
+export async function updateLiveContent(docId, newContentHtml) {
+  await setDoc(doc(db, "Live_Content", docId), { content: newContentHtml }, { merge: true });
 }
