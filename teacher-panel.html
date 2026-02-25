@@ -50,7 +50,10 @@
       <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-10 h-10 bg-sky text-white rounded-lg flex items-center justify-center text-xl">📚</div>
-          <span class="font-baloo text-xl font-bold text-sky hidden sm:block">ERT <span class="text-sun">Odisha</span> Panel</span>
+          <div class="hidden sm:block">
+            <span class="font-baloo text-xl font-bold text-sky block leading-tight">ERT <span class="text-sun">Odisha</span></span>
+            <span class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest" id="dash-email-display">user@email.com</span>
+          </div>
         </div>
         
         <div class="flex gap-2 bg-slate-100 p-1 rounded-xl">
@@ -90,11 +93,7 @@
           <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4">1. Content Target</h2>
           <p class="text-xs text-emerald-600 font-bold mb-4 bg-emerald-50 p-2 rounded-lg">✅ Multiple Uploads Enabled: You can submit multiple variations for the same chapter! Admins will review all submissions and choose the best one to publish live.</p>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()">
-              <option value="" disabled selected>Select Class</option>
-              <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option>
-              <option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option>
-            </select>
+            <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()"><option value="" disabled selected>Select Class</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option></select>
             <select id="sel-subject" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Subject</option></select>
             <select id="sel-chapter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Chapter</option></select>
             <select id="sel-type" class="w-full px-4 py-3 rounded-xl border border-sky bg-blue-50 text-sky font-bold" onchange="renderEditor()">
@@ -137,7 +136,6 @@
           </form>
         </div>
       </div>
-
     </main>
   </div>
 
@@ -164,7 +162,7 @@
     const pendingEl = document.getElementById('stat-my-pending');
     liveEl.innerText = "..."; pendingEl.innerText = "...";
     try {
-      const stats = await getTeacherStats(auth.currentUser.uid);
+      const stats = await getTeacherStats(auth.currentUser.uid, teacherDisplayName);
       liveEl.innerText = stats.live !== undefined ? stats.live : "0";
       pendingEl.innerText = stats.pending !== undefined ? stats.pending : "0";
     } catch (err) { liveEl.innerText = "0"; pendingEl.innerText = "0"; }
@@ -172,7 +170,10 @@
 
   onAuthStateChanged(auth, async (user) => {
     document.getElementById('auth-loader').classList.add('hidden'); 
-    if (user) { await loadDashboard(user); } 
+    if (user) { 
+      document.getElementById('dash-email-display').innerText = user.email;
+      await loadDashboard(user); 
+    } 
     else {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
@@ -262,7 +263,12 @@
     } catch (e) { console.error("Dashboard Loading Error:", e); }
   }
 
-  window.logout = async () => { await logoutUser(); location.reload(); };
+  // Wipes all local session memory to completely reset for a different user
+  window.logout = async () => { 
+    localStorage.removeItem('ert_teacher_name');
+    await logoutUser(); 
+    location.reload(); 
+  };
 
   window.previewProfilePic = async (e) => {
     const file = e.target.files[0];
@@ -385,10 +391,11 @@
 
       await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, auth.currentUser.uid, payload);
       
+      showToast("✅ Submitted to Admin for Review!");
+      
+      // Update UI explicitly then clear
       const pendingEl = document.getElementById('stat-my-pending');
       pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
-      
-      showToast("✅ Submitted to Admin for Review!");
       
       setTimeout(() => {
         btn.innerText = "💾 Submit to Admin";

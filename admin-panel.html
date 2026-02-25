@@ -129,12 +129,14 @@
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
           <div id="modal-content-view" class="prose max-w-none overflow-x-auto"></div>
           
-          <!-- EDIT MODE WRAPPER -->
           <div id="modal-content-edit" class="hidden">
-            <!-- For HTML content -->
+            <!-- HTML EDITOR -->
             <div id="admin-quill-wrapper" class="hidden"><div id="admin-quill" class="bg-white"></div></div>
-            <!-- For JSON Quiz content -->
-            <textarea id="admin-json-edit" class="hidden w-full h-64 p-4 font-mono text-sm bg-slate-800 text-green-400 rounded-xl outline-none" spellcheck="false"></textarea>
+            <!-- JSON EDITOR -->
+            <div id="admin-json-wrapper" class="hidden">
+              <p class="text-xs text-rose-500 font-bold mb-2 bg-rose-50 p-2 rounded">⚠️ Make sure not to delete the brackets [] or quotes "" while editing JSON!</p>
+              <textarea id="admin-json-edit" class="w-full h-64 p-4 font-mono text-sm bg-slate-800 text-green-400 rounded-xl outline-none" spellcheck="false"></textarea>
+            </div>
           </div>
         </div>
       </div>
@@ -328,13 +330,12 @@
       <button onclick="saveEdit()" class="px-5 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Edit to DB</button>
     `;
 
-    // Toggle JSON Textarea vs HTML Quill Editor
     if(currentItem.type === 'quiz') {
       document.getElementById('admin-quill-wrapper').classList.add('hidden');
-      document.getElementById('admin-json-edit').classList.remove('hidden');
+      document.getElementById('admin-json-wrapper').classList.remove('hidden');
       document.getElementById('admin-json-edit').value = JSON.stringify(currentItem.content, null, 2);
     } else {
-      document.getElementById('admin-json-edit').classList.add('hidden');
+      document.getElementById('admin-json-wrapper').classList.add('hidden');
       document.getElementById('admin-quill-wrapper').classList.remove('hidden');
       if (!adminQuill) adminQuill = new Quill('#admin-quill', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1, 2] }],['bold', 'italic'],[{ 'list': 'ordered'}, { 'list': 'bullet' }],['image', 'formula'],['clean']] }});
       adminQuill.root.innerHTML = currentItem.content;
@@ -355,7 +356,7 @@
         newContent = JSON.parse(document.getElementById('admin-json-edit').value);
         document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(newContent, null, 2)}</pre>`;
       } catch(e) {
-        return alert("Invalid JSON formatting! Please fix the brackets/quotes before saving.");
+        return alert("Invalid JSON formatting! Please fix the brackets [] or quotes before saving.");
       }
     } else {
       newContent = adminQuill.root.innerHTML;

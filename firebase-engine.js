@@ -44,7 +44,7 @@ export async function getAllTeachers() {
 }
 
 // ==========================================
-// 🚀 SMART STATS (UID Based for 100% Accuracy)
+// 🚀 SMART STATS (Cache-Aware & UID Based)
 // ==========================================
 export async function getAdminStats() {
   const pendingSnap = await getCountFromServer(collection(db, "Pending_Content"));
@@ -52,14 +52,26 @@ export async function getAdminStats() {
   return { pending: pendingSnap.data().count, live: liveSnap.data().count };
 }
 
-export async function getTeacherStats(authorId) {
+export async function getTeacherStats(authorId, authorName) {
   if (!authorId) return { pending: 0, live: 0 };
-  // Now tracks by Unique ID, not just typed name
-  const pendingQ = query(collection(db, "Pending_Content"), where("authorId", "==", authorId));
-  const liveQ = query(collection(db, "Live_Content"), where("authorId", "==", authorId));
-  const pSnap = await getCountFromServer(pendingQ);
-  const lSnap = await getCountFromServer(liveQ);
-  return { pending: pSnap.data().count, live: lSnap.data().count };
+  
+  // 1. Fetch by Unique ID (Using getDocs ensures it reads local cache instantly before server sync)
+  const pSnap = await getDocs(query(collection(db, "Pending_Content"), where("authorId", "==", authorId)));
+  const lSnap = await getDocs(query(collection(db, "Live_Content"), where("authorId", "==", authorId)));
+  
+  let pendingIds = new Set(); pSnap.forEach(d => pendingIds.add(d.id));
+  let liveIds = new Set(); lSnap.forEach(d => liveIds.add(d.id));
+
+  // 2. Fallback for older legacy documents created before the UID update
+  if (authorName) {
+    const legP = await getDocs(query(collection(db, "Pending_Content"), where("author", "==", authorName)));
+    legP.forEach(d => { if(!d.data().authorId) pendingIds.add(d.id); });
+    
+    const legL = await getDocs(query(collection(db, "Live_Content"), where("author", "==", authorName)));
+    legL.forEach(d => { if(!d.data().authorId) liveIds.add(d.id); });
+  }
+
+  return { pending: pendingIds.size, live: liveIds.size };
 }
 
 // ==========================================
@@ -71,7 +83,7 @@ export function generateDocId(classId, subject, chapter, type) {
 
 export async function submitContent(classId, subject, chapter, type, typeName, title, authorName, authorId, contentPayload) {
   const targetLiveId = generateDocId(classId, subject, chapter, type);
-  const pendingId = targetLiveId + '_' + Date.now(); // 🔹 UNIQUE ID: Allows multiple uploads for the same chapter!
+  const pendingId = targetLiveId + '_' + Date.now(); // Allows multiple submissions safely
   
   await setDoc(doc(db, "Pending_Content", pendingId), {
     id: pendingId, liveId: targetLiveId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
@@ -87,11 +99,9 @@ export async function getPendingContent() {
   return pendingItems;
 }
 export async function approveContent(pendingItem) {
-  // 🔹 STRIP TIMESTAMP: Forces the winning content into the single standard Live slot
   const targetLiveId = pendingItem.liveId || generateDocId(pendingItem.class, pendingItem.subject, pendingItem.chapter, pendingItem.type);
   const liveItem = { ...pendingItem, id: targetLiveId };
-  delete liveItem.liveId; // Clean up background routing data
-
+  delete liveItem.liveId; 
   await setDoc(doc(db, "Live_Content", targetLiveId), liveItem); 
   await deleteDoc(doc(db, "Pending_Content", pendingItem.id)); 
 }
