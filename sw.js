@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ert-odisha-v5'; // Bumped version
+const CACHE_NAME = 'ert-odisha-v7'; // BUMPED TO V7
 
 const ASSETS_TO_CACHE = [
   './',
@@ -7,8 +7,10 @@ const ASSETS_TO_CACHE = [
   './chapters.html',
   './content.html',
   './viewer.html',
-  './firebase-engine.js',
+  './teacher-panel.html',
+  './admin-panel.html',
   './contributors.html',
+  './firebase-engine.js',
   './logo.png',
   './bg-image.jpg'
 ];
@@ -28,12 +30,8 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // 1. Ignore POST/PUT/DELETE requests entirely (Firebase Auth needs this to work without crashing the SW)
-  if (event.request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
   
-  // 2. Ignore Firebase and Google API calls to prevent offline storage duplication
   if (event.request.url.includes('firestore.googleapis.com') || 
       event.request.url.includes('identitytoolkit') || 
       event.request.url.includes('firebase')) {
