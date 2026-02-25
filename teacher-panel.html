@@ -91,7 +91,11 @@
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 relative">
           <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4">1. Content Target</h2>
-          <p class="text-xs text-emerald-600 font-bold mb-4 bg-emerald-50 p-2 rounded-lg">✅ Multiple Uploads Enabled: You can submit multiple variations for the same chapter! Admins will review all submissions and choose the best one to publish live.</p>
+          
+          <p class="text-xs text-emerald-700 font-bold mb-4 bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-sm">
+            🌟 <strong class="text-sm">Crowdsourcing Active:</strong> You can submit as many individual questions or notes as you want! Your submissions will be automatically combined with other teachers' submissions to create one giant Master Quiz or Master Document for the students!
+          </p>
+          
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()"><option value="" disabled selected>Select Class</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option></select>
             <select id="sel-subject" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Subject</option></select>
@@ -142,6 +146,10 @@
   <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all z-50"></div>
 
 <script type="module">
+  // Aggressively destroy old local memory just to be absolutely certain Chrome isn't messing with us.
+  localStorage.removeItem('ert_teacher_name');
+  sessionStorage.clear();
+
   import { submitContent, loginUser, registerUser, logoutUser, auth, getTeacherStats, saveTeacherProfile, getTeacherProfile } from './firebase-engine.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -152,7 +160,6 @@
   };
 
   let quillEditor = null;
-  // STRICT IDENTITY FIX: We no longer pull names from localStorage!
   let teacherDisplayName = ""; 
   let isLoginMode = true;
   let profileBase64 = "";
@@ -178,8 +185,6 @@
     else {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
-      
-      // Wipe the form cleanly if they logged out
       document.getElementById('auth-email').value = "";
       document.getElementById('auth-password').value = "";
     }
@@ -254,12 +259,11 @@
     
     try {
       const profile = await getTeacherProfile(user.uid);
-      
-      // STRICT IDENTITY FIX: Only use DB profile. If none, force them to set it up.
       teacherDisplayName = profile?.name || "Teacher";
       
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
       document.getElementById('prof-name').value = teacherDisplayName === "Teacher" ? "" : teacherDisplayName;
+      
       if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
       if(profile?.block) document.getElementById('prof-block').value = profile.block;
       if(profile?.pic) {
@@ -272,7 +276,6 @@
     } catch (e) { console.error("Dashboard Loading Error:", e); }
   }
 
-  // Wipes all Firebase Auth memory to completely reset for a different user
   window.logout = async () => { 
     await logoutUser(); 
     location.reload(); 
@@ -361,7 +364,7 @@
   window.saveContent = async () => {
     if(!teacherDisplayName || teacherDisplayName === "Teacher") {
       switchTab('tab-profile');
-      return alert("Please enter your Display Name in the Profile tab first!");
+      return alert("Please set your Name in the Profile tab first!");
     }
     
     const btn = document.getElementById('save-btn');
@@ -400,7 +403,6 @@
       
       showToast("✅ Submitted to Admin for Review!");
       
-      // Forcefully increment the UI stat immediately so they don't have to wait for sync
       const pendingEl = document.getElementById('stat-my-pending');
       pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
       
