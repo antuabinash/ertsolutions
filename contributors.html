@@ -28,7 +28,12 @@
   <main class="max-w-7xl mx-auto px-5 py-12 text-center">
     
     <h1 class="font-baloo text-4xl md:text-5xl font-bold text-dark mb-4">Meet Our <span class="text-sky">Top Contributors</span></h1>
-    <p class="text-lg text-slate-500 mb-12 max-w-2xl mx-auto">Dedicated teachers from across Odisha working together to provide free, high-quality digital learning materials. Ranked by total published content.</p>
+    <p class="text-lg text-slate-500 mb-6 max-w-2xl mx-auto">Dedicated teachers from across Odisha working together to provide free, high-quality digital learning materials. Ranked by total published content.</p>
+
+    <!-- MANUAL REFRESH BUTTON TO FIX CACHE DELAYS -->
+    <button onclick="window.loadContributors()" class="text-sky font-bold bg-white border border-blue-200 px-6 py-3 rounded-xl mb-12 shadow-sm hover:bg-blue-50 transition flex items-center gap-2 mx-auto">
+      <span>🔄</span> Force Refresh Latest Data
+    </button>
 
     <div id="loader" class="text-2xl animate-pulse mb-8 text-sky font-bold">
       <div class="text-5xl mb-4">☁️</div>
@@ -44,7 +49,11 @@
 <script type="module">
   import { getAllTeachers, getLiveContentAll } from './firebase-engine.js';
 
-  async function loadContributors() {
+  // Make it globally accessible for the button
+  window.loadContributors = async () => {
+    document.getElementById('loader').classList.remove('hidden');
+    document.getElementById('contributors-grid').innerHTML = '';
+    
     try {
       const [teachers, liveContent] = await Promise.all([ getAllTeachers(), getLiveContentAll() ]);
       document.getElementById('loader').classList.add('hidden');
@@ -97,7 +106,8 @@
     } catch (err) { document.getElementById('loader').innerText = "Error loading leaderboard data."; console.error(err); }
   }
 
-  loadContributors();
+  // Load automatically on page visit
+  window.loadContributors();
 </script>
 
 </body>
