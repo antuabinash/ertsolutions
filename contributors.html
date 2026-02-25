@@ -59,8 +59,6 @@
       document.getElementById('loader').classList.add('hidden');
       const grid = document.getElementById('contributors-grid');
       
-      if(teachers.length === 0) { grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold text-xl">No contributors registered yet. Be the first!</div>`; return; }
-
       const contributionCounts = {};
       liveContent.forEach(item => {
         // Tie to the UID for accuracy, fallback to typed name for legacy test data
@@ -68,11 +66,17 @@
         if(key) contributionCounts[key] = (contributionCounts[key] || 0) + 1;
       });
 
+      // Map counts, FILTER OUT anyone with 0, and SORT highest to lowest
       const rankedTeachers = teachers.map(t => {
-        // Check UID first, if none, check name
         const count = contributionCounts[t.uid] || contributionCounts[t.name] || 0;
         return { ...t, liveCount: count };
-      }).sort((a, b) => b.liveCount - a.liveCount);
+      }).filter(t => t.liveCount > 0).sort((a, b) => b.liveCount - a.liveCount);
+
+      // Handle empty state if no one has > 0 live items
+      if(rankedTeachers.length === 0) { 
+        grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold text-xl">No live contributions yet. Be the first to publish!</div>`; 
+        return; 
+      }
 
       rankedTeachers.forEach((t, index) => {
         const rank = index + 1;
@@ -97,7 +101,7 @@
             <p class="text-xs text-slate-400 mt-1 mb-4 flex items-center justify-center gap-1">📍 ${dist}</p>
             
             <div class="w-full bg-slate-50 rounded-xl p-3 border border-slate-100 flex flex-col items-center justify-center">
-              <span class="text-2xl font-baloo font-bold ${t.liveCount > 0 ? 'text-emerald-500' : 'text-slate-400'}">${t.liveCount}</span>
+              <span class="text-2xl font-baloo font-bold text-emerald-500">${t.liveCount}</span>
               <span class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider">Live Uploads</span>
             </div>
           </div>
