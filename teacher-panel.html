@@ -152,7 +152,8 @@
   };
 
   let quillEditor = null;
-  let teacherDisplayName = localStorage.getItem('ert_teacher_name') || "";
+  // STRICT IDENTITY FIX: We no longer pull names from localStorage!
+  let teacherDisplayName = ""; 
   let isLoginMode = true;
   let profileBase64 = "";
 
@@ -177,6 +178,10 @@
     else {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
+      
+      // Wipe the form cleanly if they logged out
+      document.getElementById('auth-email').value = "";
+      document.getElementById('auth-password').value = "";
     }
   });
 
@@ -249,23 +254,26 @@
     
     try {
       const profile = await getTeacherProfile(user.uid);
-      teacherDisplayName = profile?.name || localStorage.getItem('ert_teacher_name') || "Teacher";
+      
+      // STRICT IDENTITY FIX: Only use DB profile. If none, force them to set it up.
+      teacherDisplayName = profile?.name || "Teacher";
       
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
-      document.getElementById('prof-name').value = teacherDisplayName;
+      document.getElementById('prof-name').value = teacherDisplayName === "Teacher" ? "" : teacherDisplayName;
       if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
       if(profile?.block) document.getElementById('prof-block').value = profile.block;
       if(profile?.pic) {
         profileBase64 = profile.pic;
         document.getElementById('prof-pic-preview').src = profile.pic;
+      } else {
+        document.getElementById('prof-pic-preview').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
       }
       await window.refreshStats();
     } catch (e) { console.error("Dashboard Loading Error:", e); }
   }
 
-  // Wipes all local session memory to completely reset for a different user
+  // Wipes all Firebase Auth memory to completely reset for a different user
   window.logout = async () => { 
-    localStorage.removeItem('ert_teacher_name');
     await logoutUser(); 
     location.reload(); 
   };
@@ -283,7 +291,6 @@
     btn.innerText = "Saving...";
     
     teacherDisplayName = document.getElementById('prof-name').value;
-    localStorage.setItem('ert_teacher_name', teacherDisplayName);
     
     const data = {
       name: teacherDisplayName,
@@ -354,7 +361,7 @@
   window.saveContent = async () => {
     if(!teacherDisplayName || teacherDisplayName === "Teacher") {
       switchTab('tab-profile');
-      return alert("Please set your Name in the Profile tab first!");
+      return alert("Please enter your Display Name in the Profile tab first!");
     }
     
     const btn = document.getElementById('save-btn');
@@ -393,7 +400,7 @@
       
       showToast("✅ Submitted to Admin for Review!");
       
-      // Update UI explicitly then clear
+      // Forcefully increment the UI stat immediately so they don't have to wait for sync
       const pendingEl = document.getElementById('stat-my-pending');
       pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
       
