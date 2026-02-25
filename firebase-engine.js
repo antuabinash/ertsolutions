@@ -34,17 +34,17 @@ export async function logoutUser() { await signOut(auth); }
 export async function saveTeacherProfile(uid, profileData) { await setDoc(doc(db, "Teachers", uid), profileData, { merge: true }); }
 export async function getTeacherProfile(uid) {
   const snap = await getDoc(doc(db, "Teachers", uid));
-  return snap.exists() ? snap.data() : null;
+  return snap.exists() ? Object.assign({uid: snap.id}, snap.data()) : null;
 }
 export async function getAllTeachers() {
   const snap = await getDocs(collection(db, "Teachers"));
   let teachers = [];
-  snap.forEach(d => teachers.push(d.data()));
+  snap.forEach(d => teachers.push(Object.assign({uid: d.id}, d.data())));
   return teachers;
 }
 
 // ==========================================
-// 🚀 SMART STATS (1-Read Optimized)
+// 🚀 SMART STATS (UID Based for 100% Accuracy)
 // ==========================================
 export async function getAdminStats() {
   const pendingSnap = await getCountFromServer(collection(db, "Pending_Content"));
@@ -52,10 +52,11 @@ export async function getAdminStats() {
   return { pending: pendingSnap.data().count, live: liveSnap.data().count };
 }
 
-export async function getTeacherStats(authorName) {
-  if (!authorName) return { pending: 0, live: 0 };
-  const pendingQ = query(collection(db, "Pending_Content"), where("author", "==", authorName));
-  const liveQ = query(collection(db, "Live_Content"), where("author", "==", authorName));
+export async function getTeacherStats(authorId) {
+  if (!authorId) return { pending: 0, live: 0 };
+  // Now tracks by Unique ID, not just typed name
+  const pendingQ = query(collection(db, "Pending_Content"), where("authorId", "==", authorId));
+  const liveQ = query(collection(db, "Live_Content"), where("authorId", "==", authorId));
   const pSnap = await getCountFromServer(pendingQ);
   const lSnap = await getCountFromServer(liveQ);
   return { pending: pSnap.data().count, live: lSnap.data().count };
@@ -68,11 +69,13 @@ export function generateDocId(classId, subject, chapter, type) {
   return `class${classId}_${subject}_ch${chapter}_${type}`;
 }
 
-export async function submitContent(classId, subject, chapter, type, typeName, title, author, contentPayload) {
-  const docId = generateDocId(classId, subject, chapter, type);
-  await setDoc(doc(db, "Pending_Content", docId), {
-    id: docId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
-    title: title, author: author, content: contentPayload, timestamp: new Date().getTime() 
+export async function submitContent(classId, subject, chapter, type, typeName, title, authorName, authorId, contentPayload) {
+  const targetLiveId = generateDocId(classId, subject, chapter, type);
+  const pendingId = targetLiveId + '_' + Date.now(); // 🔹 UNIQUE ID: Allows multiple uploads for the same chapter!
+  
+  await setDoc(doc(db, "Pending_Content", pendingId), {
+    id: pendingId, liveId: targetLiveId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
+    title: title, author: authorName, authorId: authorId, content: contentPayload, timestamp: new Date().getTime() 
   });
 }
 
@@ -84,12 +87,17 @@ export async function getPendingContent() {
   return pendingItems;
 }
 export async function approveContent(pendingItem) {
-  await setDoc(doc(db, "Live_Content", pendingItem.id), pendingItem); 
+  // 🔹 STRIP TIMESTAMP: Forces the winning content into the single standard Live slot
+  const targetLiveId = pendingItem.liveId || generateDocId(pendingItem.class, pendingItem.subject, pendingItem.chapter, pendingItem.type);
+  const liveItem = { ...pendingItem, id: targetLiveId };
+  delete liveItem.liveId; // Clean up background routing data
+
+  await setDoc(doc(db, "Live_Content", targetLiveId), liveItem); 
   await deleteDoc(doc(db, "Pending_Content", pendingItem.id)); 
 }
 export async function rejectContent(docId) { await deleteDoc(doc(db, "Pending_Content", docId)); }
 
-// LIVE MANAGER ACTIONS (NEW)
+// LIVE MANAGER ACTIONS
 export async function getLiveContentAll() {
   const querySnapshot = await getDocs(collection(db, "Live_Content"));
   let liveItems = [];
@@ -103,6 +111,6 @@ export async function fetchLiveContent(classId, subject, chapter, type) {
 export async function deleteLiveContent(docId) {
   await deleteDoc(doc(db, "Live_Content", docId));
 }
-export async function updateLiveContent(docId, newContentHtml) {
-  await setDoc(doc(db, "Live_Content", docId), { content: newContentHtml }, { merge: true });
+export async function updateLiveContent(docId, newContentPayload) {
+  await setDoc(doc(db, "Live_Content", docId), { content: newContentPayload }, { merge: true });
 }

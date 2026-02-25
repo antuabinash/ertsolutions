@@ -35,7 +35,6 @@
       Crunching the latest contribution data...
     </div>
 
-    <!-- Leaderboard Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 text-left pt-4" id="contributors-grid">
       <!-- Injected dynamically by JavaScript -->
     </div>
@@ -43,49 +42,35 @@
   </main>
 
 <script type="module">
-  // We import getLiveContentAll to calculate exact live stats without wasting reads!
   import { getAllTeachers, getLiveContentAll } from './firebase-engine.js';
 
   async function loadContributors() {
     try {
-      // 1. Fetch Teachers and ALL Live Content in parallel (Lightning fast, only 2 reads for the whole page!)
-      const [teachers, liveContent] = await Promise.all([
-        getAllTeachers(),
-        getLiveContentAll()
-      ]);
-      
+      const [teachers, liveContent] = await Promise.all([ getAllTeachers(), getLiveContentAll() ]);
       document.getElementById('loader').classList.add('hidden');
       const grid = document.getElementById('contributors-grid');
       
-      if(teachers.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold text-xl">No contributors registered yet. Be the first!</div>`;
-        return;
-      }
+      if(teachers.length === 0) { grid.innerHTML = `<div class="col-span-full text-center p-8 text-slate-400 font-bold text-xl">No contributors registered yet. Be the first!</div>`; return; }
 
-      // 2. Tally up the live content per teacher
       const contributionCounts = {};
       liveContent.forEach(item => {
-        if(item.author) {
-          contributionCounts[item.author] = (contributionCounts[item.author] || 0) + 1;
-        }
+        // Tie to the UID for accuracy, fallback to typed name for legacy test data
+        const key = item.authorId || item.author; 
+        if(key) contributionCounts[key] = (contributionCounts[key] || 0) + 1;
       });
 
-      // 3. Map the counts to the teachers and SORT them descending
       const rankedTeachers = teachers.map(t => {
-        return {
-          ...t,
-          liveCount: contributionCounts[t.name] || 0
-        };
-      }).sort((a, b) => b.liveCount - a.liveCount); // Highest count first
+        // Check UID first, if none, check name
+        const count = contributionCounts[t.uid] || contributionCounts[t.name] || 0;
+        return { ...t, liveCount: count };
+      }).sort((a, b) => b.liveCount - a.liveCount);
 
-      // 4. Render the UI
       rankedTeachers.forEach((t, index) => {
         const rank = index + 1;
         const avatar = t.pic || `https://api.dicebear.com/7.x/initials/svg?seed=${t.name}`;
         const dist = t.dist || "Odisha";
         const block = t.block || "Educator";
         
-        // Dynamic Ranking Badges
         let rankHtml = '';
         if (rank === 1) rankHtml = `<div class="rank-badge bg-yellow-400 text-white text-2xl">🥇</div>`;
         else if (rank === 2) rankHtml = `<div class="rank-badge bg-slate-300 text-white text-xl">🥈</div>`;
@@ -95,11 +80,9 @@
         grid.innerHTML += `
           <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 teacher-card flex flex-col items-center text-center mt-4">
             ${rankHtml}
-            
             <div class="w-24 h-24 rounded-full overflow-hidden mb-4 border-4 border-blue-50 shadow-inner -mt-10 bg-white">
               <img src="${avatar}" class="w-full h-full object-cover">
             </div>
-            
             <h3 class="font-baloo text-xl font-bold text-dark w-full truncate px-2">${t.name}</h3>
             <p class="text-xs font-bold text-sky uppercase tracking-wide mt-1">${block}</p>
             <p class="text-xs text-slate-400 mt-1 mb-4 flex items-center justify-center gap-1">📍 ${dist}</p>
@@ -111,11 +94,7 @@
           </div>
         `;
       });
-
-    } catch (err) {
-      document.getElementById('loader').innerText = "Error loading leaderboard data.";
-      console.error(err);
-    }
+    } catch (err) { document.getElementById('loader').innerText = "Error loading leaderboard data."; console.error(err); }
   }
 
   loadContributors();

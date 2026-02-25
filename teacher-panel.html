@@ -21,7 +21,6 @@
 </head>
 <body class="text-slate-700">
 
-  <!-- INITIAL LOADER (Prevents login screen flash) -->
   <div id="auth-loader" class="min-h-screen flex items-center justify-center bg-sky">
     <div class="text-white font-bold text-xl animate-pulse">Loading ERT Odisha...</div>
   </div>
@@ -34,7 +33,6 @@
       
       <form id="auth-form" class="space-y-4 mt-4">
         <input type="text" id="auth-name" placeholder="Display Name (e.g. Mr. Das)" class="hidden w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
-        
         <input type="email" id="auth-email" placeholder="Email Address" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
         <input type="password" id="auth-password" placeholder="Password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 outline-none">
         <button type="submit" id="auth-btn" class="w-full bg-sky text-white font-bold py-3 rounded-xl shadow-lg hover:bg-blue-600 transition">Secure Sign In</button>
@@ -66,10 +64,7 @@
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8 relative">
       
-      <!-- TAB 1: CONTENT ENTRY -->
       <div id="tab-entry" class="block">
-        
-        <!-- DASHBOARD STATS -->
         <div class="flex justify-between items-center mb-2 px-1">
           <h3 class="font-bold text-slate-500 uppercase tracking-wide text-sm">My Contributions</h3>
           <button onclick="refreshStats()" class="text-sky text-xs font-bold bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">🔄 Refresh Stats</button>
@@ -91,8 +86,9 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 relative">
           <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4">1. Content Target</h2>
+          <p class="text-xs text-emerald-600 font-bold mb-4 bg-emerald-50 p-2 rounded-lg">✅ Multiple Uploads Enabled: You can submit multiple variations for the same chapter! Admins will review all submissions and choose the best one to publish live.</p>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()">
               <option value="" disabled selected>Select Class</option>
@@ -121,15 +117,12 @@
         </div>
       </div>
 
-      <!-- TAB 2: PROFILE SETTINGS -->
       <div id="tab-profile" class="hidden max-w-2xl mx-auto">
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
           <div class="text-center mb-8">
             <div class="w-24 h-24 bg-slate-100 border-4 border-white shadow-lg rounded-full mx-auto mb-4 overflow-hidden relative group cursor-pointer" onclick="document.getElementById('prof-pic-input').click()">
               <img id="prof-pic-preview" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Teacher" class="w-full h-full object-cover">
-              <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                <span class="text-white text-xs font-bold">Edit</span>
-              </div>
+              <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><span class="text-white text-xs font-bold">Edit</span></div>
             </div>
             <input type="file" id="prof-pic-input" accept="image/*" class="hidden" onchange="previewProfilePic(event)">
             <h2 class="font-baloo text-3xl font-bold text-dark" id="prof-display-name">My Profile</h2>
@@ -165,49 +158,35 @@
   let isLoginMode = true;
   let profileBase64 = "";
 
-  // --- STATS REFRESHER ---
   window.refreshStats = async () => {
+    if(!auth.currentUser) return;
     const liveEl = document.getElementById('stat-my-live');
     const pendingEl = document.getElementById('stat-my-pending');
-    liveEl.innerText = "...";
-    pendingEl.innerText = "...";
+    liveEl.innerText = "..."; pendingEl.innerText = "...";
     try {
-      const stats = await getTeacherStats(teacherDisplayName);
+      const stats = await getTeacherStats(auth.currentUser.uid);
       liveEl.innerText = stats.live !== undefined ? stats.live : "0";
       pendingEl.innerText = stats.pending !== undefined ? stats.pending : "0";
-    } catch (err) {
-      console.error("Stats fetch error:", err);
-      liveEl.innerText = "0";
-      pendingEl.innerText = "0";
-    }
+    } catch (err) { liveEl.innerText = "0"; pendingEl.innerText = "0"; }
   };
 
-  // --- PERSISTENT LOGIN LISTENER ---
   onAuthStateChanged(auth, async (user) => {
     document.getElementById('auth-loader').classList.add('hidden'); 
-    
-    if (user) {
-      await loadDashboard(user);
-    } else {
+    if (user) { await loadDashboard(user); } 
+    else {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
     }
   });
 
-  // --- UI TOGGLES ---
   window.switchTab = (tabId) => {
     document.getElementById('tab-entry').classList.add('hidden');
     document.getElementById('tab-profile').classList.add('hidden');
     document.getElementById(tabId).classList.remove('hidden');
-    
     document.getElementById('btn-tab-entry').classList.remove('active');
     document.getElementById('btn-tab-profile').classList.remove('active');
     document.getElementById('btn-' + tabId).classList.add('active');
-
-    // Auto-refresh stats when switching back to Entry tab
-    if (tabId === 'tab-entry') {
-      window.refreshStats();
-    }
+    if (tabId === 'tab-entry') window.refreshStats();
   };
 
   window.toggleAuthMode = () => {
@@ -229,8 +208,7 @@
 
   function compressImageToBase64(file, maxWidth = 600, quality = 0.6) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+      const reader = new FileReader(); reader.readAsDataURL(file);
       reader.onload = (e) => {
         const img = new Image(); img.src = e.target.result;
         img.onload = () => {
@@ -245,13 +223,11 @@
     });
   }
 
-  // --- AUTH & INIT ---
   document.getElementById('auth-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
     const name = document.getElementById('auth-name').value;
-    
     const btn = document.getElementById('auth-btn');
     const originalText = btn.innerText;
     btn.innerText = "Authenticating...";
@@ -263,10 +239,7 @@
         const userCred = await registerUser(email, password);
         await saveTeacherProfile(userCred.user.uid, { name: name, email: email, dateJoined: new Date().getTime() });
       }
-    } catch(error) {
-      alert("Authentication Error: " + error.message);
-      btn.innerText = originalText;
-    }
+    } catch(error) { alert("Authentication Error: " + error.message); btn.innerText = originalText; }
   });
 
   async function loadDashboard(user) {
@@ -277,7 +250,6 @@
       const profile = await getTeacherProfile(user.uid);
       teacherDisplayName = profile?.name || localStorage.getItem('ert_teacher_name') || "Teacher";
       
-      // Setup UI text elements
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
       document.getElementById('prof-name').value = teacherDisplayName;
       if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
@@ -286,16 +258,12 @@
         profileBase64 = profile.pic;
         document.getElementById('prof-pic-preview').src = profile.pic;
       }
-
       await window.refreshStats();
-    } catch (e) {
-      console.error("Dashboard Loading Error:", e);
-    }
+    } catch (e) { console.error("Dashboard Loading Error:", e); }
   }
 
   window.logout = async () => { await logoutUser(); location.reload(); };
 
-  // --- PROFILE UPDATE ---
   window.previewProfilePic = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -321,19 +289,12 @@
     try {
       await saveTeacherProfile(auth.currentUser.uid, data);
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
-      
-      // Re-fetch stats using the newly updated profile name
       await window.refreshStats();
-
       btn.innerText = "Save Profile";
       showToast("✅ Profile Updated Successfully!");
-    } catch(err) {
-      alert("Error saving profile: " + err.message);
-      btn.innerText = "Save Profile";
-    }
+    } catch(err) { alert("Error saving profile: " + err.message); btn.innerText = "Save Profile"; }
   });
 
-  // --- EDITOR LOGIC ---
   window.updateSubjects = () => {
     const classId = document.getElementById('sel-class').value;
     const subSelect = document.getElementById('sel-subject');
@@ -422,15 +383,13 @@
         payload = quillEditor.root.innerHTML;
       }
 
-      await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, payload);
+      await submitContent(cls, sub, chp, type, typeName, title, teacherDisplayName, auth.currentUser.uid, payload);
       
-      // Visually increment the pending count right away so it reflects without page reload
       const pendingEl = document.getElementById('stat-my-pending');
       pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
       
       showToast("✅ Submitted to Admin for Review!");
       
-      // Instead of refreshing, clear the form gracefully
       setTimeout(() => {
         btn.innerText = "💾 Submit to Admin";
         btn.disabled = false;
@@ -438,10 +397,7 @@
         document.getElementById('sel-type').value = "";
       }, 1500);
 
-    } catch (err) {
-      alert("Error saving: " + err.message);
-      btn.innerText = "💾 Submit to Admin"; btn.disabled = false;
-    }
+    } catch (err) { alert("Error saving: " + err.message); btn.innerText = "💾 Submit to Admin"; btn.disabled = false; }
   };
 
   function showToast(msg) {
