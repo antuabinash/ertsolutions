@@ -4,260 +4,307 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Content Viewer – ERT Odisha</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffffff">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
+<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.13.18/dist/katex.min.js"></script>
 <style>
-  * { -webkit-tap-highlight-color: transparent; } body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; }
-  .toolbar { display: flex; align-items: center; padding: 15px 5%; background: #ffffff; border-bottom: 1px solid #e8eef5; position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .back-btn { margin-right: 15px; color: #1A1A2E; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; border: none; cursor: pointer; }
-  .reading-content h1 { font-family: 'Baloo 2', cursive; font-size: 2rem; font-weight: 800; color: #1A1A2E; margin-bottom: 1rem; line-height: 1.2;}
-  .reading-content h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem;}
-  .reading-content p { font-size: 1.1rem; line-height: 1.8; color: #3D4A5C; margin-bottom: 1rem; }
-  .reading-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; font-size: 1.1rem;}
-  .reading-content img { max-width: 100%; border-radius: 12px; margin: 1rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .qa-card { transition: transform 0.2s, box-shadow 0.2s; } .qa-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(58,134,255,0.15); }
+  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; -webkit-tap-highlight-color: transparent;}
+  .nav-bar { background: white; padding: 15px 5%; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 12px rgba(58,134,255,0.05); }
+  .back-btn { width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #1A1A2E; cursor: pointer; border: 1px solid #e2e8f0; text-decoration: none;}
+  
+  .reading-content p, .prose p { font-size: 1.1rem; line-height: 1.8; color: #334155; margin-bottom: 1em; }
+  .reading-content ul, .prose ul { padding-left: 1.5rem; margin-bottom: 1em; list-style-type: disc;}
+  .reading-content ol, .prose ol { padding-left: 1.5rem; margin-bottom: 1em; list-style-type: decimal;}
+  .reading-content li, .prose li { margin-bottom: 0.5em; color: #334155; }
+  .reading-content img, .prose img { max-width: 100%; border-radius: 12px; margin: 1em 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 </style>
 </head>
-<body class="text-slate-700 pb-20">
+<body class="text-slate-700">
 
-  <div class="toolbar">
-    <button type="button" class="back-btn" id="back-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <div class="flex flex-col">
-      <h2 class="font-baloo text-xl font-bold text-dark leading-tight" id="page-title">Loading...</h2>
-      <span class="text-xs font-bold text-slate-400 uppercase tracking-wide" id="page-subtitle">Content</span>
+  <nav class="nav-bar">
+    <a href="#" onclick="window.history.back(); return false;" class="back-btn">❮</a>
+    <div>
+      <h1 class="font-baloo text-xl font-bold text-dark leading-tight truncate max-w-[250px]" id="page-title">Loading...</h1>
+      <p class="text-xs font-bold text-sky uppercase tracking-widest" id="page-subtitle">...</p>
     </div>
-  </div>
+  </nav>
 
   <main class="max-w-4xl mx-auto px-5 py-8">
     
-    <!-- AUTHOR RECOGNITION BADGE (Injected dynamically) -->
-    <div id="author-badge" class="hidden mb-6 inline-flex items-center gap-2 bg-blue-50 text-sky px-4 py-2 rounded-xl text-sm font-bold border border-blue-100 shadow-sm">
-      👨‍🏫 Contributed by: <span id="content-author">Teacher Name</span>
-    </div>
-
     <div id="loader" class="text-center p-12 hidden">
-      <div class="text-4xl animate-bounce mb-2">☁️</div>
-      <p class="font-bold text-sky">Fetching Content securely...</p>
+      <div class="text-4xl animate-bounce mb-4">☁️</div>
+      <p class="font-bold text-sky text-lg">Fetching content securely...</p>
     </div>
 
-    <div id="view-reading" class="hidden bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 reading-content">
-      <div id="reading-body"></div>
+    <div id="error-state" class="text-center p-12 hidden bg-white rounded-3xl shadow-sm border border-slate-100">
+      <div class="text-5xl mb-4 opacity-50" id="error-icon">📂</div>
+      <h2 class="font-baloo text-2xl font-bold text-dark mb-2" id="error-title">No Content Yet</h2>
+      <p class="text-slate-500" id="error-desc">Teachers haven't published content for this specific section yet. Check back soon!</p>
+      <button onclick="window.history.back()" class="mt-6 bg-sky text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-blue-600 transition">Go Back</button>
     </div>
 
+    <!-- LESSON PLAN MENU (1-10) -->
+    <div id="view-lesson-menu" class="hidden">
+      <h3 class="font-baloo text-2xl font-bold text-dark mb-6 text-center">Select Lesson Note</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="lesson-tiles-container">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- Q&A MENU -->
     <div id="view-qa-menu" class="hidden">
       <h3 class="font-baloo text-2xl font-bold text-dark mb-6 text-center">Select Question Type</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a href="#type=qa_very_short" class="qa-card bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] p-6 rounded-2xl flex items-center gap-4 text-yellow-800">
-          <div class="text-4xl">⚡</div><div><h4 class="font-bold text-lg">Very Short Answer</h4><p class="text-sm opacity-80">ଅତି ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_short" class="qa-card bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-6 rounded-2xl flex items-center gap-4 text-emerald-800">
-          <div class="text-4xl">📝</div><div><h4 class="font-bold text-lg">Short Answer</h4><p class="text-sm opacity-80">ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_long" class="qa-card bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] p-6 rounded-2xl flex items-center gap-4 text-blue-800">
-          <div class="text-4xl">✍️</div><div><h4 class="font-bold text-lg">Long Answer</h4><p class="text-sm opacity-80">ଦୀର୍ଘ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_objective" class="qa-card bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] p-6 rounded-2xl flex items-center gap-4 text-purple-800">
-          <div class="text-4xl">🎯</div><div><h4 class="font-bold text-lg">Objective</h4><p class="text-sm opacity-80">ବସ୍ତୁନିଷ୍ଠ ପ୍ରଶ୍ନ</p></div></a>
+        <a id="link-qa-vshort" href="#" class="bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] p-6 rounded-2xl flex items-center gap-4 text-yellow-800 shadow-sm transition transform active:scale-95"><div class="text-4xl">⚡</div><div><h4 class="font-bold text-lg">Very Short Answer</h4><p class="text-sm opacity-80">ଅତି ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
+        <a id="link-qa-short" href="#" class="bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-6 rounded-2xl flex items-center gap-4 text-emerald-800 shadow-sm transition transform active:scale-95"><div class="text-4xl">📝</div><div><h4 class="font-bold text-lg">Short Answer</h4><p class="text-sm opacity-80">ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
+        <a id="link-qa-long" href="#" class="bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] p-6 rounded-2xl flex items-center gap-4 text-blue-800 shadow-sm transition transform active:scale-95"><div class="text-4xl">✍️</div><div><h4 class="font-bold text-lg">Long Answer</h4><p class="text-sm opacity-80">ଦୀର୍ଘ ଉତ୍ତର</p></div></a>
+        <a id="link-qa-obj" href="#" class="bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] p-6 rounded-2xl flex items-center gap-4 text-purple-800 shadow-sm transition transform active:scale-95"><div class="text-4xl">🎯</div><div><h4 class="font-bold text-lg">Objective</h4><p class="text-sm opacity-80">ବସ୍ତୁନିଷ୍ଠ ପ୍ରଶ୍ନ</p></div></a>
       </div>
     </div>
 
-    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
-      <div class="flex justify-between items-center mb-6">
-        <div class="bg-blue-100 text-sky px-4 py-1.5 rounded-full font-bold text-sm" id="quiz-progress"></div>
-        <div class="font-baloo text-xl font-bold text-[#FFBE0B] flex items-center gap-1">🏆 <span id="quiz-score">0</span></div>
+    <!-- NEW: QA FLASHCARD UI -->
+    <div id="view-qa-flashcard" class="hidden max-w-2xl mx-auto">
+      <div class="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 relative">
+         <div class="absolute top-0 right-0 bg-blue-50 text-sky px-3 py-1 rounded-bl-xl rounded-tr-3xl text-xs font-bold border-b border-l border-blue-100 shadow-sm" id="qa-author-badge">👨‍🏫 By Teacher</div>
+         
+         <div class="flex justify-between items-center mb-6 mt-4">
+           <span class="font-bold text-slate-500 bg-slate-50 border border-slate-200 px-4 py-1.5 rounded-full text-sm" id="qa-progress">Q: 1/5</span>
+         </div>
+         
+         <!-- Question Text -->
+         <h2 class="font-baloo text-2xl md:text-3xl font-bold text-dark mb-8 leading-snug" id="qa-question-text">Question goes here?</h2>
+         
+         <div class="text-center" id="qa-btn-container">
+            <button class="bg-sky text-white font-bold text-lg px-8 py-3 rounded-xl shadow-lg hover:bg-blue-600 transition w-full md:w-auto" onclick="toggleQAAnswer()">👁️ View Answer</button>
+         </div>
+
+         <!-- Answer Text -->
+         <div id="qa-answer-container" class="hidden mt-8 pt-8 border-t-2 border-dashed border-slate-100">
+            <h3 class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-4 bg-emerald-50 inline-block px-3 py-1 rounded-lg">Explanation / Answer</h3>
+            <div id="qa-answer-text" class="text-slate-700 text-lg leading-relaxed prose max-w-none">Answer goes here</div>
+         </div>
       </div>
-      <div class="bg-white p-6 md:p-8 rounded-3xl shadow-lg mb-6">
-        <h3 class="text-xl md:text-2xl font-bold text-dark mb-6" id="quiz-question">Loading...</h3>
-        <div class="flex flex-col gap-3" id="quiz-options"></div>
-      </div>
-      <div id="quiz-feedback" class="hidden text-center p-4 rounded-2xl font-bold text-lg mb-6 transition-all"></div>
-      <button id="quiz-next-btn" onclick="nextQuestion()" class="hidden w-full bg-sky text-white font-bold py-4 rounded-2xl text-lg shadow-lg">Next Question ➔</button>
       
-      <div id="quiz-results" class="hidden bg-white p-8 rounded-3xl text-center shadow-lg">
-        <div class="text-6xl mb-4">🎉</div>
-        <h3 class="font-baloo text-3xl font-bold text-dark mb-2">Quiz Completed!</h3>
-        <p class="text-lg text-slate-500 mb-6">You scored <strong class="text-sky text-2xl" id="final-score"></strong></p>
+      <!-- Navigation -->
+      <div class="flex justify-between items-center mt-6 gap-4">
+         <button onclick="prevQA()" id="qa-prev-btn" class="bg-white text-slate-600 font-bold px-6 py-3.5 rounded-xl shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed flex-1">❮ Prev</button>
+         <button onclick="nextQA()" id="qa-next-btn" class="bg-dark text-white font-bold px-6 py-3.5 rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed flex-1">Next ❯</button>
       </div>
     </div>
+
+    <!-- STANDARD READING VIEW -->
+    <div id="view-reading" class="hidden bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 reading-content">
+      <div id="reading-body" class="w-full"></div>
+    </div>
+
+    <!-- QUIZ VIEW -->
+    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+      <div id="quiz-intro" class="bg-white rounded-3xl p-8 text-center shadow-sm border border-slate-100 mb-6">
+        <div class="text-6xl mb-4">🏆</div>
+        <h2 class="font-baloo text-3xl font-bold text-dark mb-2">Ready to Play?</h2>
+        <p class="text-slate-500 mb-6">Test your knowledge on this chapter!</p>
+        <button onclick="startQuiz()" class="bg-sky text-white font-bold text-xl px-10 py-3 rounded-full shadow-lg">Start Quiz</button>
+      </div>
+
+      <div id="quiz-area" class="hidden">
+        <div class="flex justify-between items-center mb-4 px-2">
+          <span class="font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="quiz-progress">Q: 1/10</span>
+          <span class="font-bold text-sun bg-white px-3 py-1 rounded-full shadow-sm text-sm" id="quiz-score">Score: 0</span>
+        </div>
+        
+        <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 mb-6">
+          <h3 class="font-baloo text-xl md:text-2xl font-bold text-dark mb-6 leading-relaxed" id="quiz-question">Question text here?</h3>
+          <div class="space-y-3" id="quiz-options"></div>
+        </div>
+      </div>
+
+      <div id="quiz-result" class="hidden bg-white rounded-3xl p-8 text-center shadow-sm border border-slate-100">
+        <div class="text-6xl mb-4" id="result-emoji">🎉</div>
+        <h2 class="font-baloo text-3xl font-bold text-dark mb-2" id="result-title">Quiz Complete!</h2>
+        <p class="text-lg text-slate-600 mb-6">You scored <strong class="text-sky text-2xl" id="final-score">0</strong> out of <span id="total-qs">0</span></p>
+        <button onclick="location.reload()" class="bg-slate-100 text-slate-600 font-bold px-8 py-3 rounded-xl hover:bg-slate-200">Play Again</button>
+      </div>
+    </div>
+
   </main>
 
 <script type="module">
   import { fetchLiveContent } from './firebase-engine.js';
 
-  let classId, subjectKey, chapterNum, contentType;
-  let quizData = [];
+  let currentContentType = '';
   
-  window.nextQuestion = nextQuestion;
-  window.selectOption = selectOption;
+  // Quiz Variables
+  let quizData = [];
+  let currentQIndex = 0;
+  let score = 0;
+
+  // Flashcard Variables
+  let qaDataArray = [];
+  let currentQAIndex = 0;
+
+  function hideAllViews() {
+    document.getElementById('loader').classList.add('hidden');
+    document.getElementById('error-state').classList.add('hidden');
+    document.getElementById('view-qa-menu').classList.add('hidden');
+    document.getElementById('view-lesson-menu').classList.add('hidden');
+    document.getElementById('view-reading').classList.add('hidden');
+    document.getElementById('view-quiz').classList.add('hidden');
+    document.getElementById('view-qa-flashcard').classList.add('hidden');
+  }
 
   async function parseURL() {
     const hashString = window.location.hash.substring(1);
     const urlParams = new URLSearchParams(hashString);
-    classId = urlParams.get('class') || '1';
-    subjectKey = urlParams.get('subject') || 'odia';
-    chapterNum = urlParams.get('chapter') || '01';
-    contentType = urlParams.get('type') || 'notes';
+    const classId = urlParams.get('class') || '1';
+    const subjectKey = urlParams.get('subject') || 'odia';
+    const chapterNum = urlParams.get('chapter') || '01';
+    currentContentType = urlParams.get('type') || 'notes';
 
     document.getElementById('page-subtitle').innerText = `Class ${classId} • Ch ${chapterNum}`;
-    document.getElementById('author-badge').classList.add('hidden'); // Reset author badge
-    
     hideAllViews();
-    if (contentType === 'qa') {
+
+    // 1. Render Q&A Menu
+    if (currentContentType === 'qa') {
       document.getElementById('page-title').innerText = "Question & Answer";
+      const baseHash = `#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=`;
+      document.getElementById('link-qa-vshort').href = baseHash + 'qa_very_short';
+      document.getElementById('link-qa-short').href = baseHash + 'qa_short';
+      document.getElementById('link-qa-long').href = baseHash + 'qa_long';
+      document.getElementById('link-qa-obj').href = baseHash + 'qa_objective';
       document.getElementById('view-qa-menu').classList.remove('hidden');
-    } else {
-      document.getElementById('loader').classList.remove('hidden');
-      
-      try {
-        // 🚀 FIREBASE 1-READ FETCH 🚀
-        const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, contentType);
-        document.getElementById('loader').classList.add('hidden');
+      return;
+    } 
 
-        if (!dbContent) {
-          document.getElementById('page-title').innerText = "Not Found";
-          document.getElementById('view-reading').classList.remove('hidden');
-          document.getElementById('reading-body').innerHTML = `
-            <div class="text-center p-8">
-              <h1 class="text-rose-500 text-3xl mb-2">Not Uploaded Yet</h1>
-              <p>Your teacher hasn't uploaded this chapter's material yet. Check back later!</p>
-            </div>`;
-          return;
-        }
-
-        document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
-        
-        // DISPLAY TEACHER NAME!
-        if(dbContent.author) {
-          document.getElementById('content-author').innerText = dbContent.author;
-          document.getElementById('author-badge').classList.remove('hidden');
-        }
-
-        if (contentType === 'quiz') {
-          quizData = dbContent.content; 
-          document.getElementById('view-quiz').classList.remove('hidden');
-          startQuiz();
-        } else {
-          document.getElementById('view-reading').classList.remove('hidden');
-          document.getElementById('reading-body').innerHTML = dbContent.content;
-          if(window.renderMathInElement) {
-            renderMathInElement(document.getElementById('reading-body'), {
-              delimiters: [{left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}]
-            });
-          }
-        }
-      } catch (error) {
-        // ERROR HANDLING: If Mobile Network or Firebase fails
-        document.getElementById('loader').classList.add('hidden');
-        document.getElementById('page-title').innerText = "Connection Error";
-        document.getElementById('view-reading').classList.remove('hidden');
-        document.getElementById('reading-body').innerHTML = `
-          <div class="text-center p-8">
-            <h1 class="text-rose-500 text-3xl mb-2">Network Error</h1>
-            <p>We couldn't load the content. Please check your internet connection or try again later.</p>
-            <p class="text-xs text-slate-400 mt-4 break-words">Error details: ${error.message}</p>
-            <button onclick="location.reload()" class="mt-6 bg-sky text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-600 transition">Try Again</button>
-          </div>`;
+    // 2. Render Lesson Plan Sub-Menu
+    if (currentContentType === 'lesson_menu') {
+      document.getElementById('page-title').innerText = "Lesson Plans";
+      let lessonHTML = '';
+      for(let i=1; i<=10; i++) {
+         lessonHTML += `<a href="#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=lesson_${i}" class="bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-4 rounded-2xl flex flex-col items-center justify-center gap-2 text-emerald-800 shadow-sm transition transform active:scale-95 text-center"><div class="text-3xl">📋</div><h4 class="font-bold text-sm">Lesson Note ${i}</h4></a>`;
       }
+      document.getElementById('lesson-tiles-container').innerHTML = lessonHTML;
+      document.getElementById('view-lesson-menu').classList.remove('hidden');
+      return;
+    }
+
+    // 3. Fetch Real Content
+    document.getElementById('loader').classList.remove('hidden');
+    document.getElementById('page-title').innerText = "Loading...";
+
+    try {
+      const dbContent = await fetchLiveContent(classId, subjectKey, chapterNum, currentContentType);
+      document.getElementById('loader').classList.add('hidden');
+
+      if (!dbContent || !dbContent.content) {
+        document.getElementById('page-title').innerText = "Content Unavailable";
+        document.getElementById('error-state').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
+      
+      // Route to correct renderer
+      if (currentContentType === 'quiz') {
+        quizData = dbContent.content; 
+        document.getElementById('view-quiz').classList.remove('hidden');
+        document.getElementById('quiz-intro').classList.remove('hidden');
+      } else if (currentContentType.startsWith('qa_')) {
+        qaDataArray = dbContent.content; // Expecting Array from Engine!
+        startQAFlashcards();
+      } else {
+        document.getElementById('reading-body').innerHTML = dbContent.content;
+        document.getElementById('view-reading').classList.remove('hidden');
+      }
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('error-state').classList.remove('hidden');
     }
   }
 
-  document.getElementById('back-btn').addEventListener('click', function(e) {
-    e.preventDefault();
-    if (contentType.startsWith('qa_')) {
-      window.location.hash = `class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=qa`;
-    } else {
-      window.location.replace(`content.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}`);
-    }
-  });
-
-  window.addEventListener('hashchange', parseURL);
-
-  function hideAllViews() {
-    document.getElementById('view-reading').classList.add('hidden');
-    document.getElementById('view-qa-menu').classList.add('hidden');
-    document.getElementById('view-quiz').classList.add('hidden');
+  // --- QA FLASHCARD LOGIC ---
+  function startQAFlashcards() {
+    if(!qaDataArray || qaDataArray.length === 0) return;
+    currentQAIndex = 0;
+    renderQAFlashcard();
+    document.getElementById('view-qa-flashcard').classList.remove('hidden');
   }
+
+  function renderQAFlashcard() {
+    const qa = qaDataArray[currentQAIndex];
+    document.getElementById('qa-progress').innerText = `Question: ${currentQAIndex + 1} of ${qaDataArray.length}`;
+    document.getElementById('qa-author-badge').innerText = `👨‍🏫 By ${qa.author}`;
+    document.getElementById('qa-question-text').innerText = qa.title;
+    document.getElementById('qa-answer-text').innerHTML = qa.content;
+    
+    // Reset view state
+    document.getElementById('qa-answer-container').classList.add('hidden');
+    document.getElementById('qa-btn-container').classList.remove('hidden');
+    
+    // Setup buttons
+    document.getElementById('qa-prev-btn').disabled = (currentQAIndex === 0);
+    document.getElementById('qa-next-btn').disabled = (currentQAIndex === qaDataArray.length - 1);
+  }
+
+  window.toggleQAAnswer = () => {
+    document.getElementById('qa-btn-container').classList.add('hidden');
+    document.getElementById('qa-answer-container').classList.remove('hidden');
+  };
+
+  window.nextQA = () => { if (currentQAIndex < qaDataArray.length - 1) { currentQAIndex++; renderQAFlashcard(); } };
+  window.prevQA = () => { if (currentQAIndex > 0) { currentQAIndex--; renderQAFlashcard(); } };
+
 
   // --- QUIZ LOGIC ---
-  let currentQ = 0, score = 0, quizAnswered = false;
-
-  function startQuiz() {
-    currentQ = 0; score = 0; quizAnswered = false;
-    document.getElementById('quiz-results').classList.add('hidden');
-    document.getElementById('quiz-question').parentElement.classList.remove('hidden');
-    document.getElementById('quiz-score').innerText = score;
+  window.startQuiz = () => {
+    if(!quizData || quizData.length === 0) return;
+    currentQIndex = 0; score = 0;
+    quizData = quizData.sort(() => Math.random() - 0.5);
+    document.getElementById('quiz-intro').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
     loadQuestion();
-  }
+  };
 
   function loadQuestion() {
-    quizAnswered = false;
-    const qData = quizData[currentQ];
-    document.getElementById('quiz-progress').innerText = `Q ${currentQ + 1} of ${quizData.length}`;
-    document.getElementById('quiz-question').innerText = qData.q;
+    const q = quizData[currentQIndex];
+    document.getElementById('quiz-progress').innerText = `Q: ${currentQIndex + 1} / ${quizData.length}`;
+    document.getElementById('quiz-score').innerText = `Score: ${score}`;
+    document.getElementById('quiz-question').innerText = q.q;
     
-    const optionsContainer = document.getElementById('quiz-options');
-    optionsContainer.innerHTML = '';
+    const optsDiv = document.getElementById('quiz-options');
+    optsDiv.innerHTML = '';
     
-    qData.options.forEach((opt, index) => {
+    q.options.forEach((opt, idx) => {
       const btn = document.createElement('button');
-      btn.className = "w-full text-left px-6 py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold hover:border-sky transition quiz-opt-btn";
+      btn.className = "w-full text-left p-4 rounded-xl border-2 border-slate-100 font-bold text-slate-600 hover:border-sky hover:bg-blue-50 transition active:scale-95";
       btn.innerText = opt;
-      btn.onclick = () => window.selectOption(index, btn);
-      optionsContainer.appendChild(btn);
+      btn.onclick = () => checkAnswer(idx, q.answer, btn);
+      optsDiv.appendChild(btn);
     });
-
-    document.getElementById('quiz-feedback').classList.add('hidden');
-    document.getElementById('quiz-next-btn').classList.add('hidden');
   }
 
-  function selectOption(selectedIndex, btnElement) {
-    if (quizAnswered) return; 
-    quizAnswered = true;
-    const correctIndex = quizData[currentQ].answer;
-    const allBtns = document.querySelectorAll('.quiz-opt-btn');
-    const feedback = document.getElementById('quiz-feedback');
-
-    allBtns.forEach((btn, idx) => {
-      btn.classList.remove('hover:border-sky');
-      if (idx === correctIndex) btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
-      else if (idx === selectedIndex) btn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800');
-      else btn.classList.add('opacity-50');
-    });
-
-    feedback.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-700', 'bg-rose-100', 'text-rose-700');
-    if (selectedIndex === correctIndex) {
-      score += 10;
-      document.getElementById('quiz-score').innerText = score;
-      feedback.innerText = "✅ Correct Answer!";
-      feedback.classList.add('bg-emerald-100', 'text-emerald-700');
-    } else {
-      feedback.innerText = "❌ Incorrect!";
-      feedback.classList.add('bg-rose-100', 'text-rose-700');
-    }
-    document.getElementById('quiz-next-btn').classList.remove('hidden');
+  function checkAnswer(selected, correct, btnNode) {
+    const buttons = document.getElementById('quiz-options').querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+    if (selected === correct) { btnNode.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800'); score++; } 
+    else { btnNode.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800'); buttons[correct].classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800'); }
+    setTimeout(() => { currentQIndex++; if (currentQIndex < quizData.length) { loadQuestion(); } else { showResults(); } }, 1200);
   }
 
-  function nextQuestion() {
-    currentQ++;
-    if (currentQ < quizData.length) {
-      loadQuestion();
-    } else {
-      document.getElementById('quiz-question').parentElement.classList.add('hidden');
-      document.getElementById('quiz-feedback').classList.add('hidden');
-      document.getElementById('quiz-next-btn').classList.add('hidden');
-      document.getElementById('quiz-results').classList.remove('hidden');
-      document.getElementById('final-score').innerText = `${score} Points`;
-    }
+  function showResults() {
+    document.getElementById('quiz-area').classList.add('hidden');
+    document.getElementById('quiz-result').classList.remove('hidden');
+    document.getElementById('final-score').innerText = score;
+    document.getElementById('total-qs').innerText = quizData.length;
+    const p = score / quizData.length;
+    document.getElementById('result-emoji').innerText = p === 1 ? "🏆" : p >= 0.7 ? "🌟" : p >= 0.4 ? "👍" : "📚";
   }
 
-  parseURL();
-  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+  window.addEventListener('hashchange', parseURL);
+  parseURL(); 
 </script>
 
 </body>

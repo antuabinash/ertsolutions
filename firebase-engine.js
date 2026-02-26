@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
-  getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, initializeFirestore, persistentLocalCache,
+  getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc,
   getCountFromServer, query, where 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { 
@@ -21,13 +21,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = initializeFirestore(app, { localCache: persistentLocalCache({ cacheSizeBytes: 10485760 }) });
+const db = getFirestore(app); 
 const storage = getStorage(app);
 export const auth = getAuth(app); 
 
-// ==========================================
-// 🔐 AUTHENTICATION & PROFILES
-// ==========================================
 export async function loginUser(email, password) { return await signInWithEmailAndPassword(auth, email, password); }
 export async function registerUser(email, password) { return await createUserWithEmailAndPassword(auth, email, password); }
 export async function logoutUser() { await signOut(auth); }
@@ -43,9 +40,6 @@ export async function getAllTeachers() {
   return teachers;
 }
 
-// ==========================================
-// 🚀 SMART STATS (Cache-Aware & UID Based)
-// ==========================================
 export async function getAdminStats() {
   const pendingSnap = await getCountFromServer(collection(db, "Pending_Content"));
   const liveSnap = await getCountFromServer(collection(db, "Live_Content"));
@@ -54,73 +48,105 @@ export async function getAdminStats() {
 
 export async function getTeacherStats(authorId, authorName) {
   if (!authorId) return { pending: 0, live: 0 };
-  
-  // 1. Fetch by Unique ID (Using getDocs ensures it reads local cache instantly before server sync)
   const pSnap = await getDocs(query(collection(db, "Pending_Content"), where("authorId", "==", authorId)));
   const lSnap = await getDocs(query(collection(db, "Live_Content"), where("authorId", "==", authorId)));
-  
   let pendingIds = new Set(); pSnap.forEach(d => pendingIds.add(d.id));
   let liveIds = new Set(); lSnap.forEach(d => liveIds.add(d.id));
 
-  // 2. Fallback for older legacy documents created before the UID update
   if (authorName) {
     const legP = await getDocs(query(collection(db, "Pending_Content"), where("author", "==", authorName)));
     legP.forEach(d => { if(!d.data().authorId) pendingIds.add(d.id); });
-    
     const legL = await getDocs(query(collection(db, "Live_Content"), where("author", "==", authorName)));
     legL.forEach(d => { if(!d.data().authorId) liveIds.add(d.id); });
   }
-
   return { pending: pendingIds.size, live: liveIds.size };
 }
 
-// ==========================================
-// 🚀 CONTENT DATABASE FUNCTIONS
-// ==========================================
-export function generateDocId(classId, subject, chapter, type) {
-  return `class${classId}_${subject}_ch${chapter}_${type}`;
-}
-
 export async function submitContent(classId, subject, chapter, type, typeName, title, authorName, authorId, contentPayload) {
-  const targetLiveId = generateDocId(classId, subject, chapter, type);
-  const pendingId = targetLiveId + '_' + Date.now(); // Allows multiple submissions safely
-  
-  await setDoc(doc(db, "Pending_Content", pendingId), {
-    id: pendingId, liveId: targetLiveId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
+  const baseId = `class${classId}_${subject}_ch${chapter}_${type}`;
+  const uniqueId = baseId + '_' + Date.now(); 
+  await setDoc(doc(db, "Pending_Content", uniqueId), {
+    id: uniqueId, class: classId, subject: subject, chapter: chapter, type: type, typeName: typeName,
     title: title, author: authorName, authorId: authorId, content: contentPayload, timestamp: new Date().getTime() 
   });
 }
 
-// PENDING ACTIONS
 export async function getPendingContent() {
   const querySnapshot = await getDocs(collection(db, "Pending_Content"));
   let pendingItems = [];
   querySnapshot.forEach((doc) => pendingItems.push(doc.data()));
   return pendingItems;
 }
+
 export async function approveContent(pendingItem) {
-  const targetLiveId = pendingItem.liveId || generateDocId(pendingItem.class, pendingItem.subject, pendingItem.chapter, pendingItem.type);
-  const liveItem = { ...pendingItem, id: targetLiveId };
-  delete liveItem.liveId; 
-  await setDoc(doc(db, "Live_Content", targetLiveId), liveItem); 
+  const liveItem = { ...pendingItem };
+  await setDoc(doc(db, "Live_Content", pendingItem.id), liveItem); 
   await deleteDoc(doc(db, "Pending_Content", pendingItem.id)); 
 }
 export async function rejectContent(docId) { await deleteDoc(doc(db, "Pending_Content", docId)); }
 
-// LIVE MANAGER ACTIONS
 export async function getLiveContentAll() {
   const querySnapshot = await getDocs(collection(db, "Live_Content"));
   let liveItems = [];
   querySnapshot.forEach((doc) => liveItems.push(doc.data()));
   return liveItems;
 }
+
 export async function fetchLiveContent(classId, subject, chapter, type) {
-  const docSnap = await getDoc(doc(db, "Live_Content", generateDocId(classId, subject, chapter, type)));
-  return docSnap.exists() ? docSnap.data() : null; 
+  const q = query(collection(db, "Live_Content"),
+    where("class", "==", classId),
+    where("subject", "==", subject),
+    where("chapter", "==", chapter),
+    where("type", "==", type)
+  );
+  
+  const querySnapshot = await getDocs(q);
+  if (querySnapshot.empty) return null;
+
+  let mergedContent = null;
+  let authors = new Set();
+  let typeName = "";
+
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    if(data.author) authors.add(data.author);
+    if(!typeName) typeName = data.typeName;
+
+    if (type === 'quiz') {
+      if (!mergedContent) mergedContent = [];
+      mergedContent = mergedContent.concat(data.content);
+    } else if (type.startsWith('qa_')) {
+      // NEW: Pass Q&A out as an Array so we can build the Flashcards!
+      if (!mergedContent) mergedContent = [];
+      mergedContent.push({
+        title: data.title,
+        content: data.content,
+        author: data.author
+      });
+    } else {
+      if (!mergedContent) mergedContent = "";
+      if (mergedContent !== "") mergedContent += `<hr class="my-10 border-slate-200 border-2 rounded-full">`;
+      mergedContent += `
+        <div class="relative pt-2 pb-4">
+          <div class="inline-flex items-center gap-2 bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-200 mb-4 shadow-sm">
+            👨‍🏫 Contributed by: <span class="text-sky">${data.author}</span>
+          </div>
+          <h2 class="font-baloo text-2xl font-bold text-dark mb-4 border-b border-slate-100 pb-3">${data.title}</h2>
+          <div class="text-slate-700 text-[1.1rem] leading-relaxed">${data.content}</div>
+        </div>`;
+    }
+  });
+
+  return {
+    title: typeName, 
+    typeName: typeName,
+    author: Array.from(authors).join(', '),
+    content: mergedContent
+  };
 }
-export async function deleteLiveContent(docId) {
-  await deleteDoc(doc(db, "Live_Content", docId));
-}
-export async function updateLiveContent(docId, newContentPayload) {
-  await setDoc(doc(db, "Live_Content", docId), { content: newContentPayload }, { merge: true });
+
+export async function deleteLiveContent(docId) { await deleteDoc(doc(db, "Live_Content", docId)); }
+// NEW: Allows editing of BOTH the Title (Question) and the Content (Answer)
+export async function updateLiveContent(docId, newTitle, newContentPayload) { 
+  await setDoc(doc(db, "Live_Content", docId), { title: newTitle, content: newContentPayload }, { merge: true }); 
 }

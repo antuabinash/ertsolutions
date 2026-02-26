@@ -97,7 +97,9 @@
                 <option value="01">Ch 1</option><option value="02">Ch 2</option><option value="03">Ch 3</option><option value="04">Ch 4</option><option value="05">Ch 5</option><option value="06">Ch 6</option><option value="07">Ch 7</option>
               </select>
               <select id="filter-type" class="px-3 py-2 rounded-lg border outline-none text-sm font-bold text-slate-600" onchange="applyLiveFilter()"><option value="ALL">All Content</option>
-                <option value="notes">Notes</option><option value="lesson">Lesson Plan</option><option value="outcome">Learning Outcome</option><option value="tlm">TLM</option><option value="qa_very_short">Q&A - Very Short</option><option value="qa_short">Q&A - Short</option><option value="qa_long">Q&A - Long</option><option value="qa_objective">Q&A - Objective</option><option value="quiz">Interactive Quiz</option>
+                <option value="notes">Notes</option>
+                <optgroup label="Lesson Plans"><option value="lesson_1">Lesson Note 1</option><option value="lesson_2">Lesson Note 2</option><option value="lesson_3">Lesson Note 3</option><option value="lesson_4">Lesson Note 4</option><option value="lesson_5">Lesson Note 5</option><option value="lesson_6">Lesson Note 6</option><option value="lesson_7">Lesson Note 7</option><option value="lesson_8">Lesson Note 8</option><option value="lesson_9">Lesson Note 9</option><option value="lesson_10">Lesson Note 10</option></optgroup>
+                <option value="innovative">Innovative Practices</option><option value="tlm">TLM</option><option value="qa_very_short">Q&A - Very Short</option><option value="qa_short">Q&A - Short</option><option value="qa_long">Q&A - Long</option><option value="qa_objective">Q&A - Objective</option><option value="quiz">Interactive Quiz</option>
               </select>
             </div>
           </div>
@@ -119,11 +121,15 @@
       
       <div class="p-6 overflow-y-auto flex-1">
         <div class="flex justify-between items-start mb-4">
-          <div>
+          <div class="w-full mr-4">
             <div class="inline-flex items-center gap-2 bg-blue-50 text-sky px-3 py-1.5 rounded-lg text-sm font-bold mb-2 border border-blue-100">👨‍🏫 By: <span id="modal-author">Teacher</span></div>
-            <h2 class="text-2xl font-bold text-dark" id="modal-title">Title</h2>
+            
+            <!-- NEW: DYNAMIC TITLE / EDIT TITLE -->
+            <h2 class="text-2xl font-bold text-dark border-b border-slate-100 pb-2" id="modal-title-view">Title</h2>
+            <input type="text" id="modal-title-edit" class="hidden w-full text-xl font-bold text-dark p-3 border-2 border-sky rounded-xl outline-none mb-2 shadow-sm" placeholder="Edit Title / Question">
+            
           </div>
-          <button id="btn-view-student" onclick="openStudentView()" class="hidden bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-slate-700">🎓 View as Student</button>
+          <button id="btn-view-student" onclick="openStudentView()" class="hidden bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold shadow hover:bg-slate-700 whitespace-nowrap">🎓 View as Student</button>
         </div>
         
         <div class="bg-slate-50 p-6 rounded-xl border border-slate-100">
@@ -132,10 +138,27 @@
           <div id="modal-content-edit" class="hidden">
             <!-- HTML EDITOR -->
             <div id="admin-quill-wrapper" class="hidden"><div id="admin-quill" class="bg-white"></div></div>
-            <!-- JSON EDITOR -->
-            <div id="admin-json-wrapper" class="hidden">
-              <p class="text-xs text-rose-500 font-bold mb-2 bg-rose-50 p-2 rounded">⚠️ Make sure not to delete the brackets [] or quotes "" while editing JSON!</p>
-              <textarea id="admin-json-edit" class="w-full h-64 p-4 font-mono text-sm bg-slate-800 text-green-400 rounded-xl outline-none" spellcheck="false"></textarea>
+            
+            <!-- NEW CLEAN QUIZ EDITOR UI -->
+            <div id="admin-quiz-wrapper" class="hidden space-y-3 bg-white p-6 rounded-xl border border-slate-200">
+              <label class="font-bold text-xs text-slate-500 uppercase tracking-wider">Quiz Question</label>
+              <textarea id="edit-quiz-q" class="w-full p-3 rounded-xl border outline-none bg-slate-50 mb-2"></textarea>
+              
+              <label class="font-bold text-xs text-slate-500 uppercase tracking-wider">Options</label>
+              <div class="grid grid-cols-2 gap-3 mb-2">
+                <input id="edit-quiz-opt0" class="w-full p-3 rounded-xl border outline-none bg-slate-50" placeholder="Option A">
+                <input id="edit-quiz-opt1" class="w-full p-3 rounded-xl border outline-none bg-slate-50" placeholder="Option B">
+                <input id="edit-quiz-opt2" class="w-full p-3 rounded-xl border outline-none bg-slate-50" placeholder="Option C">
+                <input id="edit-quiz-opt3" class="w-full p-3 rounded-xl border outline-none bg-slate-50" placeholder="Option D">
+              </div>
+              
+              <label class="font-bold text-xs text-slate-500 uppercase tracking-wider">Correct Answer</label>
+              <select id="edit-quiz-ans" class="w-full p-3 rounded-xl border outline-none bg-emerald-50 text-emerald-800 font-bold">
+                 <option value="0">Option A</option>
+                 <option value="1">Option B</option>
+                 <option value="2">Option C</option>
+                 <option value="3">Option D</option>
+              </select>
             </div>
           </div>
         </div>
@@ -279,7 +302,7 @@
     currentMode = mode;
     currentItem = mode === 'pending' ? pendingData.find(i => i.id === id) : liveData.find(i => i.id === id);
     
-    document.getElementById('modal-title').innerText = currentItem.title;
+    document.getElementById('modal-title-view').innerText = currentItem.title;
     document.getElementById('modal-author').innerText = currentItem.author;
     
     const badge = document.getElementById('modal-badge-status');
@@ -295,9 +318,13 @@
       document.getElementById('modal-content-view').innerHTML = currentItem.content;
     }
     
-    buildModalFooter();
+    // Reset view states
+    document.getElementById('modal-title-view').classList.remove('hidden');
+    document.getElementById('modal-title-edit').classList.add('hidden');
     document.getElementById('modal-content-view').classList.remove('hidden');
     document.getElementById('modal-content-edit').classList.add('hidden');
+    
+    buildModalFooter();
     document.getElementById('review-modal').classList.remove('hidden');
   };
 
@@ -322,20 +349,34 @@
   window.openStudentView = () => window.open(`viewer.html#class=${currentItem.class}&subject=${currentItem.subject}&chapter=${currentItem.chapter}&type=${currentItem.type}`, '_blank');
 
   window.enableEditMode = () => {
+    // Reveal Edit Inputs
+    document.getElementById('modal-title-view').classList.add('hidden');
+    document.getElementById('modal-title-edit').classList.remove('hidden');
+    document.getElementById('modal-title-edit').value = currentItem.title;
+    
     document.getElementById('modal-content-view').classList.add('hidden');
     document.getElementById('modal-content-edit').classList.remove('hidden');
     
     document.getElementById('modal-footer').innerHTML = `
       <button onclick="cancelEdit()" class="px-5 py-2 rounded-xl font-bold text-slate-500 border border-slate-300">Cancel Edit</button>
-      <button onclick="saveEdit()" class="px-5 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Edit to DB</button>
+      <button onclick="saveEdit()" class="px-5 py-2 rounded-xl font-bold text-white bg-sky shadow-lg">💾 Save Changes</button>
     `;
 
+    // Initialize the correct editor based on Type
     if(currentItem.type === 'quiz') {
       document.getElementById('admin-quill-wrapper').classList.add('hidden');
-      document.getElementById('admin-json-wrapper').classList.remove('hidden');
-      document.getElementById('admin-json-edit').value = JSON.stringify(currentItem.content, null, 2);
+      document.getElementById('admin-quiz-wrapper').classList.remove('hidden');
+      
+      const qData = currentItem.content[0];
+      document.getElementById('edit-quiz-q').value = qData.q;
+      document.getElementById('edit-quiz-opt0').value = qData.options[0];
+      document.getElementById('edit-quiz-opt1').value = qData.options[1];
+      document.getElementById('edit-quiz-opt2').value = qData.options[2];
+      document.getElementById('edit-quiz-opt3').value = qData.options[3];
+      document.getElementById('edit-quiz-ans').value = qData.answer;
+      
     } else {
-      document.getElementById('admin-json-wrapper').classList.add('hidden');
+      document.getElementById('admin-quiz-wrapper').classList.add('hidden');
       document.getElementById('admin-quill-wrapper').classList.remove('hidden');
       if (!adminQuill) adminQuill = new Quill('#admin-quill', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1, 2] }],['bold', 'italic'],[{ 'list': 'ordered'}, { 'list': 'bullet' }],['image', 'formula'],['clean']] }});
       adminQuill.root.innerHTML = currentItem.content;
@@ -343,32 +384,44 @@
   };
 
   window.cancelEdit = () => {
+    document.getElementById('modal-title-view').classList.remove('hidden');
+    document.getElementById('modal-title-edit').classList.add('hidden');
     document.getElementById('modal-content-view').classList.remove('hidden');
     document.getElementById('modal-content-edit').classList.add('hidden');
     buildModalFooter();
   };
 
   window.saveEdit = async () => {
+    let newTitle = document.getElementById('modal-title-edit').value;
     let newContent = null;
 
     if(currentItem.type === 'quiz') {
-      try {
-        newContent = JSON.parse(document.getElementById('admin-json-edit').value);
-        document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(newContent, null, 2)}</pre>`;
-      } catch(e) {
-        return alert("Invalid JSON formatting! Please fix the brackets [] or quotes before saving.");
-      }
+      // Rebuild the secure array from the Admin Form
+      newContent = [{
+        q: document.getElementById('edit-quiz-q').value,
+        options: [
+          document.getElementById('edit-quiz-opt0').value,
+          document.getElementById('edit-quiz-opt1').value,
+          document.getElementById('edit-quiz-opt2').value,
+          document.getElementById('edit-quiz-opt3').value
+        ],
+        answer: parseInt(document.getElementById('edit-quiz-ans').value)
+      }];
+      document.getElementById('modal-content-view').innerHTML = `<pre class="text-xs bg-slate-800 text-green-400 p-4 rounded-lg overflow-x-auto">${JSON.stringify(newContent, null, 2)}</pre>`;
     } else {
       newContent = adminQuill.root.innerHTML;
       document.getElementById('modal-content-view').innerHTML = newContent;
     }
 
+    currentItem.title = newTitle;
     currentItem.content = newContent;
+    document.getElementById('modal-title-view').innerText = newTitle;
     
     if(currentMode === 'live') {
       try {
-        await updateLiveContent(currentItem.id, newContent);
+        await updateLiveContent(currentItem.id, newTitle, newContent);
         showToast("✅ Live Content Updated!", "bg-sky");
+        window.fetchData(); // Silently refresh the row
       } catch(e) { alert("Error saving live edit."); }
     } else {
       showToast("Edit applied locally. Click Approve to push live.", "bg-slate-800");

@@ -91,17 +91,34 @@
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 relative">
           <h2 class="font-baloo text-2xl font-bold text-dark mb-6 border-b pb-4">1. Content Target</h2>
-          <p class="text-xs text-emerald-600 font-bold mb-4 bg-emerald-50 p-2 rounded-lg">✅ Multiple Uploads Enabled: You can submit multiple variations for the same chapter! Admins will review all submissions and choose the best one to publish live.</p>
+          
+          <p class="text-xs text-emerald-700 font-bold mb-4 bg-emerald-50 border border-emerald-200 p-3 rounded-xl shadow-sm">
+            🌟 <strong class="text-sm">Crowdsourcing Active:</strong> You can submit as many individual questions or notes as you want! Your submissions will be automatically combined with other teachers' submissions to create one giant Master Quiz or Master Document for the students!
+          </p>
+          
           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <select id="sel-class" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50" onchange="updateSubjects()"><option value="" disabled selected>Select Class</option><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option><option value="7">Class 7</option><option value="8">Class 8</option></select>
             <select id="sel-subject" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Subject</option></select>
             <select id="sel-chapter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 disabled:opacity-50" disabled><option value="" disabled selected>Select Chapter</option></select>
+            
             <select id="sel-type" class="w-full px-4 py-3 rounded-xl border border-sky bg-blue-50 text-sky font-bold" onchange="renderEditor()">
               <option value="" disabled selected>Choose Type...</option>
-              <option value="notes">📓 Notes</option><option value="lesson">📋 Lesson Plan</option>
-              <option value="outcome">📈 Learning Outcome</option><option value="tlm">🧩 TLM</option>
-              <option value="qa_very_short">⚡ Q&A - Very Short</option><option value="qa_short">📝 Q&A - Short</option>
-              <option value="qa_long">✍️ Q&A - Long</option><option value="qa_objective">🎯 Q&A - Objective (Text)</option>
+              <option value="notes">📓 Notes</option>
+              <optgroup label="Lesson Plans">
+                <option value="lesson_1">📋 Lesson Note 1</option><option value="lesson_2">📋 Lesson Note 2</option>
+                <option value="lesson_3">📋 Lesson Note 3</option><option value="lesson_4">📋 Lesson Note 4</option>
+                <option value="lesson_5">📋 Lesson Note 5</option><option value="lesson_6">📋 Lesson Note 6</option>
+                <option value="lesson_7">📋 Lesson Note 7</option><option value="lesson_8">📋 Lesson Note 8</option>
+                <option value="lesson_9">📋 Lesson Note 9</option><option value="lesson_10">📋 Lesson Note 10</option>
+              </optgroup>
+              <option value="innovative">💡 Innovative Practices</option>
+              <option value="tlm">🧩 TLM</option>
+              <optgroup label="Question & Answer">
+                <option value="qa_very_short">⚡ Q&A - Very Short</option>
+                <option value="qa_short">📝 Q&A - Short</option>
+                <option value="qa_long">✍️ Q&A - Long</option>
+                <option value="qa_objective">🎯 Q&A - Objective (Text)</option>
+              </optgroup>
               <option value="quiz">🕹️ Interactive Quiz Game</option>
             </select>
           </div>
@@ -142,6 +159,9 @@
   <div id="toast" class="fixed bottom-5 right-5 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-2xl font-bold transform translate-y-20 opacity-0 transition-all z-50"></div>
 
 <script type="module">
+  localStorage.removeItem('ert_teacher_name');
+  sessionStorage.clear();
+
   import { submitContent, loginUser, registerUser, logoutUser, auth, getTeacherStats, saveTeacherProfile, getTeacherProfile } from './firebase-engine.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -152,7 +172,7 @@
   };
 
   let quillEditor = null;
-  let teacherDisplayName = localStorage.getItem('ert_teacher_name') || "";
+  let teacherDisplayName = ""; 
   let isLoginMode = true;
   let profileBase64 = "";
 
@@ -177,6 +197,8 @@
     else {
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('auth-email').value = "";
+      document.getElementById('auth-password').value = "";
     }
   });
 
@@ -249,23 +271,24 @@
     
     try {
       const profile = await getTeacherProfile(user.uid);
-      teacherDisplayName = profile?.name || localStorage.getItem('ert_teacher_name') || "Teacher";
+      teacherDisplayName = profile?.name || "Teacher";
       
       document.getElementById('prof-display-name').innerText = teacherDisplayName;
-      document.getElementById('prof-name').value = teacherDisplayName;
+      document.getElementById('prof-name').value = teacherDisplayName === "Teacher" ? "" : teacherDisplayName;
+      
       if(profile?.dist) document.getElementById('prof-dist').value = profile.dist;
       if(profile?.block) document.getElementById('prof-block').value = profile.block;
       if(profile?.pic) {
         profileBase64 = profile.pic;
         document.getElementById('prof-pic-preview').src = profile.pic;
+      } else {
+        document.getElementById('prof-pic-preview').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
       }
       await window.refreshStats();
     } catch (e) { console.error("Dashboard Loading Error:", e); }
   }
 
-  // Wipes all local session memory to completely reset for a different user
   window.logout = async () => { 
-    localStorage.removeItem('ert_teacher_name');
     await logoutUser(); 
     location.reload(); 
   };
@@ -283,7 +306,6 @@
     btn.innerText = "Saving...";
     
     teacherDisplayName = document.getElementById('prof-name').value;
-    localStorage.setItem('ert_teacher_name', teacherDisplayName);
     
     const data = {
       name: teacherDisplayName,
@@ -344,10 +366,10 @@
       `;
     } else {
       workspace.innerHTML = `
-        <input type="text" id="content-title" placeholder="Main Heading/Title" class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none">
+        <input type="text" id="content-title" placeholder="${type.startsWith('qa_') ? 'Question Text' : 'Main Heading/Title'}" class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none">
         <div id="quill-editor" class="bg-white"></div>
       `;
-      quillEditor = new Quill('#quill-editor', { theme: 'snow', modules: { formula: true, toolbar: [[{ 'header': [1,2,3,false] }],['bold','italic','underline'],[{ 'list': 'ordered'},{ 'list': 'bullet' }],['link','image','formula'],['clean']] } });
+      quillEditor = new Quill('#quill-editor', { theme: 'snow', placeholder: type.startsWith('qa_') ? 'Write the answer explanation here...' : 'Write your content here...', modules: { formula: true, toolbar: [[{ 'header': [1,2,3,false] }],['bold','italic','underline'],[{ 'list': 'ordered'},{ 'list': 'bullet' }],['link','image','formula'],['clean']] } });
     }
   };
 
@@ -365,7 +387,7 @@
     const chp = document.getElementById('sel-chapter').value;
     const selType = document.getElementById('sel-type');
     const type = selType.value;
-    const typeName = selType.options[selType.selectedIndex].text;
+    const typeName = selType.options[selType.selectedIndex].text.replace(/📋 |💡 |🧩 |⚡ |📝 |✍️ |🎯 |🕹️ |📓 /g, '');
     const title = document.getElementById('content-title')?.value || "Untitled";
 
     let payload = null;
@@ -393,7 +415,6 @@
       
       showToast("✅ Submitted to Admin for Review!");
       
-      // Update UI explicitly then clear
       const pendingEl = document.getElementById('stat-my-pending');
       pendingEl.innerText = parseInt(pendingEl.innerText || 0) + 1;
       
