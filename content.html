@@ -3,195 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chapter Content – ERT Odisha</title>
-
-<!-- PWA Meta Tags -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#ffffff">
-<link rel="apple-touch-icon" href="logo.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+<title>Content Menu – ERT Odisha</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: { colors: { sky: '#3A86FF', sun: '#FFBE0B', dark: '#1A1A2E', bg: '#F0F7FF'}, fontFamily: { baloo: ['"Baloo 2"', 'cursive'], nunito: ['Nunito', 'sans-serif']}}}}</script>
 <style>
-  :root {
-    --sun: #FFBE0B; --sky: #3A86FF; --bg: #F0F7FF; 
-    --white: #ffffff; --dark: #1A1A2E; --text: #3D4A5C;
-    --card-shadow: 0 8px 32px rgba(58,134,255,0.10);
-  }
-
-  /* Added PWA tap-highlight removal */
-  * { 
-    margin: 0; padding: 0; box-sizing: border-box; 
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-
-  /* TOOLBAR */
-  .subject-toolbar {
-    display: flex; align-items: center; padding: 15px 5%;
-    background: var(--white); border-bottom: 1px solid #e8eef5;
-    position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  }
-  .back-btn {
-    margin-right: 15px; color: var(--dark);
-    display: flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 50%; background: #f0f4f8; transition: background 0.2s;
-    border: none; cursor: pointer;
-    user-select: none; -webkit-user-select: none;
-  }
-  .back-btn:hover { background: #e2e8f0; }
-
-  .toolbar-text { display: flex; flex-direction: column; }
-  .subject-title { font-family: 'Baloo 2', cursive; font-size: 1.3rem; font-weight: 700; color: var(--dark); margin: 0; line-height: 1.2;}
-  .class-subtitle { font-size: 0.75rem; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
-
-  /* GRID CONTAINER */
-  .classes-section { padding: 30px 5% 60px; max-width: 1200px; margin: 0 auto; }
-  .classes-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; }
-
-  /* TILE STYLE */
-  .class-card {
-    background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: var(--card-shadow);
-    cursor: pointer; transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
-    display: block; position: relative; opacity: 0; animation: fadeUp 0.4s ease forwards;
-    user-select: none; -webkit-user-select: none;
-  }
-  .class-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(58,134,255,0.18); }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-
-  .cc-top { padding: 1.6rem 1.4rem 1rem; display: flex; flex-direction: column; align-items: center; }
-  .cc-emoji { font-size: 2.8rem; margin-bottom: 0.4rem; line-height: 1;}
-  .cc-class { font-size: 0.75rem; font-weight: 700; color: #888; letter-spacing: 0.5px; text-transform: uppercase;}
-  .cc-odia { font-size: 1rem; font-weight: 700; color: var(--dark); margin-top: 0.3rem; text-align: center; }
-  
-  .cc-bottom {
-    padding: 0.8rem 1.4rem 1.2rem; display: flex; align-items: center; justify-content: center;
-    gap: 0.4rem; font-size: 0.82rem; font-weight: 700; border-top: 1px solid #f0f0f0;
-  }
-  .cc-bottom span { opacity: 0.7; }
-  .cc-arrow { transition: transform 0.2s; }
-  .class-card:hover .cc-arrow { transform: translateX(4px); }
-
-  /* Colors (Added all 8 to support the new tiles) */
-  .c1 .cc-top { background: linear-gradient(135deg, #FFF3CC, #FFE680); } .c1 .cc-bottom { color: #E6A800; }
-  .c2 .cc-top { background: linear-gradient(135deg, #D4F5EC, #A8EDD9); } .c2 .cc-bottom { color: #00A878; }
-  .c3 .cc-top { background: linear-gradient(135deg, #D6EAFF, #AACEFF); } .c3 .cc-bottom { color: #2176DB; }
-  .c4 .cc-top { background: linear-gradient(135deg, #FFE4E4, #FFBBBB); } .c4 .cc-bottom { color: #D94040; }
-  .c5 .cc-top { background: linear-gradient(135deg, #EDE0FF, #D4BAFF); } .c5 .cc-bottom { color: #7B3FD4; }
-  .c6 .cc-top { background: linear-gradient(135deg, #D8F8FF, #A2EEFF); } .c6 .cc-bottom { color: #0097B2; }
-  .c7 .cc-top { background: linear-gradient(135deg, #FFE8D6, #FFCBA8); } .c7 .cc-bottom { color: #D46120; }
-  .c8 .cc-top { background: linear-gradient(135deg, #E0FFE6, #B0F0BD); } .c8 .cc-bottom { color: #1B8A3A; }
-
-  /* MOBILE / TABLET OVERRIDES FOR RECTANGULAR TILES */
-  @media (max-width: 900px) {
-    .classes-section { padding: 15px 5% 40px; }
-    .classes-grid { grid-template-columns: 1fr; gap: 14px; }
-    .class-card { display: flex; flex-direction: row; align-items: stretch; border-radius: 20px; }
-    
-    .cc-top {
-      flex: 1; display: grid; grid-template-columns: auto 1fr; align-items: center;
-      gap: 0 14px; padding: 16px 20px; border-radius: 20px 0 0 20px;
-    }
-    .cc-emoji { grid-column: 1; grid-row: 1 / span 2; margin: 0; font-size: 2.4rem; }
-    .cc-class { grid-column: 2; grid-row: 1; text-align: left; font-size: 0.85rem; align-self: end; padding-bottom: 2px;}
-    .cc-odia { grid-column: 2; grid-row: 2; text-align: left; margin: 0; font-size: 1.15rem; align-self: start; }
-
-    .cc-bottom {
-      border-top: none; padding: 0 22px; background: var(--white); border-radius: 0 20px 20px 0;
-      box-shadow: -4px 0 12px rgba(0,0,0,0.02); z-index: 2;
-    }
-    .cc-bottom span:first-child { display: none; } 
-    .cc-bottom .cc-arrow { font-size: 1.5rem; }
-  }
-  @media (max-width: 480px) {
-    .cc-top { padding: 14px 16px; gap: 0 12px; }
-    .cc-emoji { font-size: 2.2rem; }
-    .cc-bottom { padding: 0 18px; }
-  }
+  body { font-family: 'Nunito', sans-serif; background-color: #F0F7FF; -webkit-tap-highlight-color: transparent;}
+  .nav-bar { background: white; padding: 15px 5%; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 12px rgba(58,134,255,0.05); }
+  .back-btn { width: 40px; height: 40px; background: #f8fafc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #1A1A2E; cursor: pointer; border: 1px solid #e2e8f0; transition: all 0.2s; text-decoration: none;}
+  .back-btn:active { background: #e2e8f0; transform: scale(0.95); }
+  .menu-card { transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; gap: 20px; padding: 20px; border-radius: 24px; text-decoration: none; border: 1px solid rgba(255,255,255,0.5); }
+  .menu-card:active { transform: scale(0.98); }
 </style>
 </head>
-<body>
+<body class="text-slate-700">
 
-  <div class="subject-toolbar">
-    <!-- SMART BACK BUTTON -->
-    <button type="button" class="back-btn" id="back-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <div class="toolbar-text">
-      <h2 class="subject-title" id="page-title">Chapter Content</h2>
-      <span class="class-subtitle" id="page-subtitle">Class • Subject</span>
+  <nav class="nav-bar">
+    <!-- FLAWLESS NATIVE BACK BUTTON -->
+    <a href="#" onclick="window.history.back(); return false;" class="back-btn">❮</a>
+    <div>
+      <h1 class="font-baloo text-xl font-bold text-dark leading-tight" id="page-title">Loading...</h1>
+      <p class="text-xs font-bold text-sky uppercase tracking-widest" id="page-subtitle">...</p>
     </div>
-  </div>
-  
-  <section class="classes-section">
-    <div class="classes-grid" id="content-grid">
-      <!-- We will generate these dynamically using JS to pass parameters -->
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-5 py-8">
+    <h2 class="font-baloo text-2xl font-bold text-dark mb-6">Select Content Type</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <a href="#" id="link-notes" class="menu-card bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] shadow-sm">
+        <div class="text-5xl">📓</div><div><h3 class="font-bold text-yellow-900 text-lg">Notes</h3><p class="text-yellow-800 text-sm opacity-80">ପାଠ୍ୟ ଟିପ୍ପଣୀ</p></div>
+      </a>
+      <a href="#" id="link-lesson" class="menu-card bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] shadow-sm">
+        <div class="text-5xl">📋</div><div><h3 class="font-bold text-emerald-900 text-lg">Lesson Plan</h3><p class="text-emerald-800 text-sm opacity-80">ପାଠ ଯୋଜନା</p></div>
+      </a>
+      <a href="#" id="link-tlm" class="menu-card bg-gradient-to-br from-[#FFE4E4] to-[#FFBBBB] shadow-sm">
+        <div class="text-5xl">🧩</div><div><h3 class="font-bold text-red-900 text-lg">TLM</h3><p class="text-red-800 text-sm opacity-80">ଶିକ୍ଷଣ ସାମଗ୍ରୀ</p></div>
+      </a>
+      <a href="#" id="link-qa" class="menu-card bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] shadow-sm">
+        <div class="text-5xl">💬</div><div><h3 class="font-bold text-blue-900 text-lg">Question & Answer</h3><p class="text-blue-800 text-sm opacity-80">ପ୍ରଶ୍ନ ଉତ୍ତର</p></div>
+      </a>
+      <a href="#" id="link-quiz" class="menu-card bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] shadow-sm sm:col-span-2">
+        <div class="text-5xl">🕹️</div><div><h3 class="font-bold text-purple-900 text-lg">Interactive Quiz</h3><p class="text-purple-800 text-sm opacity-80">ଖେଳ ମାଧ୍ୟମରେ ପ୍ରଶ୍ନୋତ୍ତର</p></div>
+      </a>
     </div>
-  </section>
+  </main>
 
 <script>
-  const hashString = window.location.hash.substring(1);
-  const urlParams = new URLSearchParams(hashString);
-  const classId = urlParams.get('class') || '1';
-  const subjectKey = urlParams.get('subject') || 'odia';
-  const chapterNum = urlParams.get('chapter') || '01';
+  const subjectNames = { odia: 'Odia (ଓଡ଼ିଆ)', math: 'Math (ଗଣିତ)', paribesa: 'EVS (ପରିବେଶ)', eng: 'English (ଇଂରାଜୀ)', sci: 'Science (ବିଜ୍ଞାନ)', soc: 'Social Sci (ସାମାଜିକ ବିଜ୍ଞାନ)', hindi: 'Hindi (ହିନ୍ଦୀ)', skt: 'Sanskrit (ସଂସ୍କୃତ)' };
 
-  // Smart Back Logic (Fixed to prevent history loops)
-  document.getElementById('back-btn').addEventListener('click', function() {
-    window.location.replace(`chapters.html#class=${classId}&subject=${subjectKey}`);
-  });
+  function parseURL() {
+    const hashString = window.location.hash.substring(1);
+    const urlParams = new URLSearchParams(hashString);
+    const classId = urlParams.get('class') || '1';
+    const subjectKey = urlParams.get('subject') || 'odia';
+    const chapterNum = urlParams.get('chapter') || '01';
 
-  const subjectNames = {
-    odia: 'Odia', math: 'Mathematics', paribesa: 'Paribesa', 
-    eng: 'English', sci: 'Science', soc: 'Social Science', 
-    hindi: 'Hindi', skt: 'Sanskrit'
-  };
-  
-  const subjectName = subjectNames[subjectKey] || 'Subject';
-  
-  document.getElementById('page-title').innerText = `Chapter ${chapterNum}`;
-  document.getElementById('page-subtitle').innerText = `Class ${classId} • ${subjectName}`;
+    document.getElementById('page-title').innerText = `Chapter ${chapterNum}`;
+    document.getElementById('page-subtitle').innerText = `Class ${classId} • ${subjectNames[subjectKey] || subjectKey}`;
 
-  // --- DYNAMICALLY RENDER CONTENT TILES WITH CORRECT LINKS ---
-  const contentTypes = [
-    { id: 'notes', emoji: '📓', eng: 'Study Notes', odia: 'ନୋଟ', color: 'c1' },
-    { id: 'lesson', emoji: '📋', eng: 'Lesson Plan', odia: 'ପାଠ୍ୟ ଯୋଜନା', color: 'c2' },
-    { id: 'qa', emoji: '💡', eng: 'Question & Answer', odia: 'ପ୍ରଶ୍ନ ଉତ୍ତର', color: 'c3' },
-    { id: 'quiz', emoji: '🎯', eng: 'Practice Quiz', odia: 'କ୍ୱିଜ୍', color: 'c5' },
-    { id: 'outcome', emoji: '📈', eng: 'Learning Outcome', odia: 'ଶିକ୍ଷଣ ଫଳାଫଳ', color: 'c6' },
-    { id: 'tlm', emoji: '🧩', eng: 'TLM', odia: 'ଶିକ୍ଷଣ ଉପକରଣ', color: 'c4' }
-  ];
-
-  const grid = document.getElementById('content-grid');
-  contentTypes.forEach((type, index) => {
-    const delay = index * 0.1;
-    // Link passes ALL data to viewer.html
-    const link = `viewer.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=${type.id}`;
-    
-    grid.insertAdjacentHTML('beforeend', `
-      <a href="${link}" class="class-card ${type.color}" style="animation-delay: ${delay}s">
-        <div class="cc-top">
-          <div class="cc-emoji">${type.emoji}</div>
-          <div class="cc-class">${type.eng}</div>
-          <div class="cc-odia">${type.odia}</div>
-        </div>
-        <div class="cc-bottom">
-          <span>Open</span>
-          <span class="cc-arrow">→</span>
-        </div>
-      </a>
-    `);
-  });
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js');
-    });
+    // Pass parameters perfectly to the viewer
+    const baseHref = `viewer.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=`;
+    document.getElementById('link-notes').href = baseHref + 'notes';
+    document.getElementById('link-lesson').href = baseHref + 'lesson';
+    document.getElementById('link-tlm').href = baseHref + 'tlm';
+    document.getElementById('link-qa').href = baseHref + 'qa';
+    document.getElementById('link-quiz').href = baseHref + 'quiz';
   }
+
+  window.addEventListener('hashchange', parseURL);
+  parseURL(); // Run on load
 </script>
+
 </body>
 </html>
