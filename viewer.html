@@ -39,11 +39,6 @@
 
   <main class="max-w-4xl mx-auto px-5 py-8">
     
-    <!-- AUTHOR RECOGNITION BADGE (Injected dynamically) -->
-    <div id="author-badge" class="hidden mb-6 inline-flex items-center gap-2 bg-blue-50 text-sky px-4 py-2 rounded-xl text-sm font-bold border border-blue-100 shadow-sm">
-      👨‍🏫 Contributed by: <span id="content-author">Teacher Name</span>
-    </div>
-
     <div id="loader" class="text-center p-12 hidden">
       <div class="text-4xl animate-bounce mb-2">☁️</div>
       <p class="font-bold text-sky">Fetching Content securely...</p>
@@ -140,12 +135,6 @@
 
         document.getElementById('page-title').innerText = dbContent.title || dbContent.typeName;
         
-        // DISPLAY TEACHER NAME!
-        if(dbContent.author) {
-          document.getElementById('content-author').innerText = dbContent.author;
-          document.getElementById('author-badge').classList.remove('hidden');
-        }
-
         if (contentType === 'quiz') {
           quizData = dbContent.content; 
           document.getElementById('view-quiz').classList.remove('hidden');
@@ -178,7 +167,8 @@
   document.getElementById('back-btn').addEventListener('click', function(e) {
     e.preventDefault();
     if (contentType.startsWith('qa_')) {
-      window.location.hash = `class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=qa`;
+      // Use replace to prevent infinite history loops
+      window.location.replace(`#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=qa`);
     } else {
       window.location.replace(`content.html#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}`);
     }
