@@ -56,13 +56,13 @@
     <div id="view-qa-menu" class="hidden">
       <h3 class="font-baloo text-2xl font-bold text-dark mb-6 text-center">Select Question Type</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a href="#type=qa_very_short" class="qa-card bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] p-6 rounded-2xl flex items-center gap-4 text-yellow-800">
+        <a id="link-qa-vshort" href="#type=qa_very_short" class="qa-card bg-gradient-to-br from-[#FFF3CC] to-[#FFE680] p-6 rounded-2xl flex items-center gap-4 text-yellow-800">
           <div class="text-4xl">⚡</div><div><h4 class="font-bold text-lg">Very Short Answer</h4><p class="text-sm opacity-80">ଅତି ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_short" class="qa-card bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-6 rounded-2xl flex items-center gap-4 text-emerald-800">
+        <a id="link-qa-short" href="#type=qa_short" class="qa-card bg-gradient-to-br from-[#D4F5EC] to-[#A8EDD9] p-6 rounded-2xl flex items-center gap-4 text-emerald-800">
           <div class="text-4xl">📝</div><div><h4 class="font-bold text-lg">Short Answer</h4><p class="text-sm opacity-80">ସଂକ୍ଷିପ୍ତ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_long" class="qa-card bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] p-6 rounded-2xl flex items-center gap-4 text-blue-800">
+        <a id="link-qa-long" href="#type=qa_long" class="qa-card bg-gradient-to-br from-[#D6EAFF] to-[#AACEFF] p-6 rounded-2xl flex items-center gap-4 text-blue-800">
           <div class="text-4xl">✍️</div><div><h4 class="font-bold text-lg">Long Answer</h4><p class="text-sm opacity-80">ଦୀର୍ଘ ଉତ୍ତର</p></div></a>
-        <a href="#type=qa_objective" class="qa-card bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] p-6 rounded-2xl flex items-center gap-4 text-purple-800">
+        <a id="link-qa-obj" href="#type=qa_objective" class="qa-card bg-gradient-to-br from-[#EDE0FF] to-[#D4BAFF] p-6 rounded-2xl flex items-center gap-4 text-purple-800">
           <div class="text-4xl">🎯</div><div><h4 class="font-bold text-lg">Objective</h4><p class="text-sm opacity-80">ବସ୍ତୁନିଷ୍ଠ ପ୍ରଶ୍ନ</p></div></a>
       </div>
     </div>
@@ -110,6 +110,14 @@
     hideAllViews();
     if (contentType === 'qa') {
       document.getElementById('page-title').innerText = "Question & Answer";
+      
+      // FIX: Dynamically update the links so they remember the Class, Subject, and Chapter!
+      const baseHash = `#class=${classId}&subject=${subjectKey}&chapter=${chapterNum}&type=`;
+      document.getElementById('link-qa-vshort').href = baseHash + 'qa_very_short';
+      document.getElementById('link-qa-short').href = baseHash + 'qa_short';
+      document.getElementById('link-qa-long').href = baseHash + 'qa_long';
+      document.getElementById('link-qa-obj').href = baseHash + 'qa_objective';
+      
       document.getElementById('view-qa-menu').classList.remove('hidden');
     } else {
       document.getElementById('loader').classList.remove('hidden');
