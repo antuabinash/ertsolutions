@@ -25,7 +25,6 @@
 <body class="text-slate-700">
 
   <nav class="nav-bar">
-    <!-- NATIVE BACK BUTTON PREVENTS LOOPS -->
     <a href="#" onclick="window.history.back(); return false;" class="back-btn">❮</a>
     <div>
       <h1 class="font-baloo text-xl font-bold text-dark leading-tight truncate max-w-[250px]" id="page-title">Loading...</h1>
@@ -43,10 +42,10 @@
 
     <!-- ERROR / EMPTY STATE -->
     <div id="error-state" class="text-center p-12 hidden bg-white rounded-3xl shadow-sm border border-slate-100">
-      <div class="text-5xl mb-4 opacity-50">📂</div>
-      <h2 class="font-baloo text-2xl font-bold text-dark mb-2">No Content Yet</h2>
-      <p class="text-slate-500">Teachers haven't published content for this specific section yet. Check back soon!</p>
-      <button onclick="window.history.back()" class="mt-6 bg-sky text-white px-6 py-2 rounded-xl font-bold">Go Back</button>
+      <div class="text-5xl mb-4 opacity-50" id="error-icon">📂</div>
+      <h2 class="font-baloo text-2xl font-bold text-dark mb-2" id="error-title">No Content Yet</h2>
+      <p class="text-slate-500" id="error-desc">Teachers haven't published content for this specific section yet. Check back soon!</p>
+      <button onclick="window.history.back()" class="mt-6 bg-sky text-white px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-blue-600 transition">Go Back</button>
     </div>
 
     <!-- Q&A MENU -->
@@ -66,7 +65,6 @@
 
     <!-- READING VIEW -->
     <div id="view-reading" class="hidden bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 reading-content">
-      <!-- The inner content will dynamically generate its own author tags via the engine! -->
       <div id="reading-body" class="w-full"></div>
     </div>
 
@@ -141,7 +139,6 @@
       return;
     } 
 
-    // Fetch Content Mode
     document.getElementById('loader').classList.remove('hidden');
     document.getElementById('page-title').innerText = "Loading...";
 
@@ -150,7 +147,10 @@
       document.getElementById('loader').classList.add('hidden');
 
       if (!dbContent || !dbContent.content) {
-        document.getElementById('page-title').innerText = "Empty";
+        document.getElementById('page-title').innerText = "Content Unavailable";
+        document.getElementById('error-title').innerText = "No Content Yet";
+        document.getElementById('error-desc').innerText = "Teachers haven't published content for this specific section yet. Check back soon!";
+        document.getElementById('error-icon').innerText = "📂";
         document.getElementById('error-state').classList.remove('hidden');
         return;
       }
@@ -172,7 +172,19 @@
       console.error(err);
       document.getElementById('loader').classList.add('hidden');
       document.getElementById('error-state').classList.remove('hidden');
-      document.getElementById('error-state').innerHTML = `<h2 class="font-baloo text-2xl text-rose-500 font-bold mb-2">Network Error</h2><p class="text-slate-500">Failed to load. Please check internet.</p>`;
+      
+      // SMART ERROR CATCHER: Tells you exactly if the Firebase Rules are broken!
+      if (err.message && err.message.includes('permission')) {
+        document.getElementById('page-title').innerText = "Security Error";
+        document.getElementById('error-title').innerText = "Access Blocked";
+        document.getElementById('error-icon').innerText = "🔒";
+        document.getElementById('error-desc').innerHTML = `Your Firebase Security Rules are blocking access.<br><br><b>Admin Fix:</b> Go to Firebase Console &rarr; Firestore Rules &rarr; Ensure <code>allow read: if true;</code> is set for Live_Content.`;
+      } else {
+        document.getElementById('page-title').innerText = "Network Error";
+        document.getElementById('error-title').innerText = "Connection Failed";
+        document.getElementById('error-icon').innerText = "📡";
+        document.getElementById('error-desc').innerText = "We couldn't connect to the server. Please check your internet connection.";
+      }
     }
   }
 
@@ -180,10 +192,7 @@
   window.startQuiz = () => {
     if(!quizData || quizData.length === 0) return;
     currentQIndex = 0; score = 0;
-    
-    // Shuffle questions
     quizData = quizData.sort(() => Math.random() - 0.5);
-    
     document.getElementById('quiz-intro').classList.add('hidden');
     document.getElementById('quiz-area').classList.remove('hidden');
     loadQuestion();
@@ -209,7 +218,7 @@
 
   function checkAnswer(selected, correct, btnNode) {
     const buttons = document.getElementById('quiz-options').querySelectorAll('button');
-    buttons.forEach(b => b.disabled = true); // lock
+    buttons.forEach(b => b.disabled = true);
 
     if (selected === correct) {
       btnNode.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
@@ -242,9 +251,8 @@
     else document.getElementById('result-emoji').innerText = "📚";
   }
 
-  // Bind to URL hash changes natively
   window.addEventListener('hashchange', parseURL);
-  parseURL(); // Initial load
+  parseURL(); 
 </script>
 
 </body>
